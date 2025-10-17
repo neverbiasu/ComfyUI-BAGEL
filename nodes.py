@@ -16,7 +16,13 @@ from accelerate import (
     dispatch_model,
 )
 from accelerate.utils import BnbQuantizationConfig, load_and_quantize_model
-from dfloat11 import DFloat11Model
+
+# Conditional import for dfloat11
+try:
+    from dfloat11 import DFloat11Model
+except ImportError:
+    DFloat11Model = None
+    print("Warning: dfloat11 not installed. DFloat11 models will not be available.")
 
 # Add current directory to path
 current_dir = os.path.dirname(os.path.abspath(__file__))
