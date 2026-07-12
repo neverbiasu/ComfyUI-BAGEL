@@ -171,7 +171,7 @@ ComfyUI/models/vae/ae.safetensors
 Do not place tokenizer assets in `models/text_encoders`. That directory is for text-encoder weights. BAGEL's tokenizer implementation and assets ship with the custom node, following ComfyUI's source-packaged tokenizer pattern:
 
 ```text
-comfyui_bagel/tokenizers/qwen2_bagel/
+modeling/qwen2/tokenizer/
 ```
 
 The loader chooses the tokenizer implementation from model metadata and validates its vocabulary hash and special-token IDs. No tokenizer node is exposed.
@@ -343,30 +343,40 @@ Release requires a pushed Fork branch, clean installation from that branch, thre
 ## 14. Repository Structure
 
 ```text
-comfyui_bagel/
-├── nodes/
-│   ├── loaders.py
-│   ├── generation.py
-│   ├── editing.py
-│   ├── understanding.py
-│   └── legacy.py
-├── models/
-│   ├── bagel_model.py
-│   ├── patcher.py
-│   └── variants/
-├── runtime/
-│   ├── inference.py
-│   ├── conditioning.py
-│   └── latent.py
-├── conversion/
-│   ├── convert.py
-│   ├── key_mapping.py
-│   └── manifest.py
-└── tokenizers/
-    └── qwen2_bagel/
+ComfyUI-BAGEL/
+├── __init__.py
+├── nodes.py                       # existing legacy nodes and compatibility exports
+├── nodes_model_loading.py         # converted BAGEL loader and loader-only settings
+├── nodes_generation.py            # native generate, edit, and understand nodes
+├── inferencer.py                  # legacy image-returning inference path
+├── runtime.py                     # native VAE-free BAGEL runtime
+├── modeling/
+│   ├── autoencoder.py             # retained for legacy workflows only
+│   ├── bagel/
+│   │   ├── bagel.py
+│   │   ├── latent.py              # FLUX latent validation and patchify helpers
+│   │   ├── model_loader.py        # complete converted BAGEL construction
+│   │   ├── model_patcher.py       # ComfyUI lifecycle integration
+│   │   └── variants.py            # structural variant registry and adapters
+│   └── qwen2/
+│       ├── tokenization_qwen2.py
+│       └── tokenizer/             # source-packaged BAGEL tokenizer assets
+├── scripts/
+│   └── convert_bagel_model.py     # offline conversion CLI
+├── tests/
+│   ├── unit/                      # pure Python and meta-device tests
+│   ├── workflows/                 # workflow JSON contract/regression tests
+│   └── fixtures/                  # small metadata and key-layout fixtures only
+└── example_workflows/
+    ├── legacy files
+    └── native files
 ```
 
-Existing upstream-derived model code may be migrated incrementally rather than moved wholesale in the first task. File moves must serve a reviewed task and preserve import compatibility.
+Do not introduce a second top-level Python package. The repository directory is already the ComfyUI custom-node package, and its root `__init__.py` is ComfyUI's entrypoint. Follow WanVideoWrapper's top-level `nodes_*.py` module convention while keeping BAGEL architecture code under the existing `modeling/` tree.
+
+Tests live in a root `tests/` directory, following Nunchaku's Python test layout. Workflow fixtures and graph assertions follow VideoHelperSuite's root-level workflow regression pattern. Tests must not require installing the repository as a differently named Python package; `tests/conftest.py` loads the custom-node root with the same package context ComfyUI uses.
+
+Existing upstream-derived model code is modified incrementally rather than moved wholesale. File moves must serve a reviewed task and preserve relative-import compatibility.
 
 ## 15. OpenCode Implementation and Review Loop
 
@@ -388,7 +398,7 @@ OpenCode must not commit before review. Review checks scope, legacy compatibilit
 
 Planned task order:
 
-1. Install the ComfyUI custom-node skills and add package/test scaffolding without behavior changes.
+1. Install the ComfyUI custom-node skills and add a root-level test harness without changing the existing package layout or behavior.
 2. Specify and implement the converted safetensors schema and BF16 converter.
 3. Add conversion equivalence and manifest validation.
 4. Implement the converted BAGEL model object, variant registry, tokenizer, patcher, and loader.
@@ -415,4 +425,3 @@ Each task ends in a commit only after Codex approves the implementation and evid
 - automatic model downloads in the core loader;
 - claiming support for every indexed BAGEL derivative before validation;
 - removing legacy nodes or `models/bagel` support.
-

@@ -26,47 +26,41 @@
 
 ## Target File Map
 
-- `comfyui_bagel/types.py`: immutable model, variant, capability, and runtime value types.
-- `comfyui_bagel/conversion/schema.py`: converted-format metadata keys and validation.
-- `comfyui_bagel/conversion/key_mapping.py`: raw-to-converted state-dict mapping.
-- `comfyui_bagel/conversion/convert.py`: offline CLI conversion entry point.
-- `comfyui_bagel/tokenizers/bagel.py`: BAGEL tokenizer construction and fingerprint checks.
-- `comfyui_bagel/tokenizers/qwen2_bagel/`: source-packaged tokenizer assets.
-- `comfyui_bagel/models/variants/base.py`: variant adapter protocol.
-- `comfyui_bagel/models/variants/registry.py`: structural detection and capability registry.
-- `comfyui_bagel/models/variants/bagel.py`: BAGEL BF16 adapter.
-- `comfyui_bagel/models/variants/df11.py`: DF11 adapter.
-- `comfyui_bagel/models/variants/reca.py`: RecA adapter.
-- `comfyui_bagel/models/patcher.py`: ComfyUI lifecycle wrapper and reload factory.
-- `comfyui_bagel/models/loader.py`: converted-file discovery and complete BAGEL construction.
-- `comfyui_bagel/runtime/latent.py`: FLUX latent validation and BAGEL patchify/unpatchify.
-- `comfyui_bagel/runtime/inference.py`: VAE-free generation/editing/understanding runtime.
-- `comfyui_bagel/nodes/loaders.py`: native model loader node.
-- `comfyui_bagel/nodes/generation.py`: native generation node.
-- `comfyui_bagel/nodes/editing.py`: native editing node.
-- `comfyui_bagel/nodes/understanding.py`: native understanding node.
-- `comfyui_bagel/nodes/legacy.py`: compatibility facades for existing nodes.
-- `comfyui_bagel/node_registry.py`: mappings exported by top-level `__init__.py`.
-- `tests/`: unit and CPU/meta-device integration tests.
-- `example_workflows/native/`: native workflow JSON files.
+- `__init__.py`: ComfyUI custom-node entrypoint and combined node mappings.
+- `nodes.py`: existing legacy node definitions; preserve their public contracts.
+- `nodes_model_loading.py`: converted BAGEL loader and loader-specific settings.
+- `nodes_generation.py`: native generation, editing, and understanding nodes.
+- `runtime.py`: VAE-free generation/editing/understanding runtime.
+- `inferencer.py`: legacy image-returning inference path.
+- `modeling/bagel/model_types.py`: immutable model, variant, capability, and runtime value types.
+- `modeling/bagel/converted_format.py`: converted-format metadata and key validation.
+- `modeling/bagel/model_loader.py`: converted-file discovery and complete BAGEL construction.
+- `modeling/bagel/model_patcher.py`: ComfyUI lifecycle wrapper and reload factory.
+- `modeling/bagel/variants.py`: structural registry plus BAGEL, DF11, and RecA adapters.
+- `modeling/bagel/latent.py`: FLUX latent validation and BAGEL patchify/unpatchify.
+- `modeling/qwen2/bagel_tokenizer.py`: tokenizer construction and fingerprint checks.
+- `modeling/qwen2/tokenizer/`: source-packaged tokenizer assets.
+- `scripts/convert_bagel_model.py`: offline raw-to-converted CLI.
+- `tests/unit/`: pure Python, schema, tokenizer, latent, and meta-device tests.
+- `tests/workflows/`: node-contract and workflow JSON regression tests.
+- `tests/fixtures/`: small metadata and key-layout fixtures; never model weights.
+- `example_workflows/`: existing legacy workflows plus native workflow JSON files.
 - `docs/validation/`: local and AutoDL evidence.
+
+Do not create a `comfyui_bagel/` directory. This repository root is already the custom-node Python package. Follow WanVideoWrapper's top-level `nodes_*.py` layout and keep architecture code in the existing `modeling/` tree. Root `tests/` follows Nunchaku; workflow JSON regression follows VideoHelperSuite.
 
 ---
 
-### Task 1: Branch, Skill Installation, and Testable Package Skeleton
+### Task 1: Branch, Skill Installation, and Test Harness
 
 **Files:**
-- Create: `comfyui_bagel/__init__.py`
-- Create: `comfyui_bagel/node_registry.py`
 - Create: `tests/conftest.py`
-- Create: `tests/test_package_import.py`
-- Modify: `__init__.py`
-- Modify: `pyproject.toml`
+- Create: `tests/unit/test_node_registration.py`
 - Install after approval: project-local ComfyUI custom-node skills under `.agents/skills/`
 
 **Interfaces:**
 - Consumes: existing `NODE_CLASS_MAPPINGS` and `NODE_DISPLAY_NAME_MAPPINGS` from `nodes.py`.
-- Produces: `comfyui_bagel.node_registry.get_node_mappings() -> tuple[dict[str, type], dict[str, str]]` that initially returns legacy mappings unchanged.
+- Produces: a test harness that imports the repository root as a ComfyUI custom-node package and verifies the existing mappings unchanged.
 
 - [ ] **Step 1: Create and switch to the implementation branch**
 
@@ -93,47 +87,53 @@ Expected: nine project-local ComfyUI skill entrypoints covering basics, inputs, 
 - [ ] **Step 3: Write the failing import-preservation test**
 
 ```python
-# tests/test_package_import.py
-def test_new_registry_preserves_all_legacy_nodes():
-    from comfyui_bagel.node_registry import get_node_mappings
+# tests/unit/test_node_registration.py
+def test_root_entrypoint_preserves_all_legacy_nodes(custom_node_module):
     from nodes import NODE_CLASS_MAPPINGS as legacy
 
-    classes, displays = get_node_mappings()
+    classes = custom_node_module.NODE_CLASS_MAPPINGS
+    displays = custom_node_module.NODE_DISPLAY_NAME_MAPPINGS
     assert set(legacy).issubset(classes)
     assert set(displays).issubset(classes)
 ```
 
-- [ ] **Step 4: Run the test and verify the package is absent**
+- [ ] **Step 4: Run the test and verify the harness is absent**
 
-Run: `pytest tests/test_package_import.py -v`
+Run: `pytest tests/unit/test_node_registration.py -v`
 
-Expected: FAIL with `ModuleNotFoundError: No module named 'comfyui_bagel'`.
+Expected: FAIL because the `custom_node_module` fixture is not defined.
 
-- [ ] **Step 5: Add the minimal package and registry**
-
-```python
-# comfyui_bagel/node_registry.py
-def get_node_mappings():
-    from nodes import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS
-    return dict(NODE_CLASS_MAPPINGS), dict(NODE_DISPLAY_NAME_MAPPINGS)
-```
+- [ ] **Step 5: Add a ComfyUI-context import fixture**
 
 ```python
-# comfyui_bagel/__init__.py
-from .node_registry import get_node_mappings
+# tests/conftest.py
+def install_fake_comfy_modules(monkeypatch):
+    """Install only the folder_paths/comfy attributes required at import time."""
+    # Add each explicit stub when the failing import identifies it. Runtime
+    # behavior covered by an assertion must use a purpose-built fake instead.
 
-__all__ = ["get_node_mappings"]
+@pytest.fixture
+def custom_node_module(monkeypatch):
+    install_fake_comfy_modules(monkeypatch)
+    spec = importlib.util.spec_from_file_location(
+        "ComfyUI_BAGEL", ROOT / "__init__.py",
+        submodule_search_locations=[str(ROOT)],
+    )
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 ```
 
-Update the root `__init__.py` to export mappings returned by `get_node_mappings()` while preserving the same module-level names.
+`install_fake_comfy_modules` supplies only the APIs needed during import. Do not create a second application package or change root mappings in this task.
 
 - [ ] **Step 6: Run package and existing syntax checks**
 
 Run:
 
 ```bash
-pytest tests/test_package_import.py -v
-python -m compileall -q comfyui_bagel nodes.py inferencer.py modeling
+pytest tests/unit/test_node_registration.py -v
+python -m compileall -q nodes.py inferencer.py modeling tests
 git diff --check
 ```
 
@@ -146,20 +146,17 @@ Provide `git diff`, test output, and the list of installed skill files. Do not c
 - [ ] **Step 8: Commit after Codex approval**
 
 ```bash
-git add .agents/skills comfyui_bagel tests __init__.py pyproject.toml
-git commit -m "chore: scaffold native BAGEL package"
+git add .agents/skills tests
+git commit -m "test: add custom node test harness"
 ```
 
 ### Task 2: Converted Safetensors Schema and BF16 Converter
 
 **Files:**
-- Create: `comfyui_bagel/conversion/__init__.py`
-- Create: `comfyui_bagel/conversion/schema.py`
-- Create: `comfyui_bagel/conversion/key_mapping.py`
-- Create: `comfyui_bagel/conversion/convert.py`
-- Create: `tests/conversion/test_schema.py`
-- Create: `tests/conversion/test_key_mapping.py`
-- Create: `tests/conversion/test_convert_cli.py`
+- Create: `modeling/bagel/converted_format.py`
+- Create: `scripts/convert_bagel_model.py`
+- Create: `tests/unit/test_converted_format.py`
+- Create: `tests/unit/test_model_conversion.py`
 
 **Interfaces:**
 - Produces: `ConvertedBagelMetadata.from_safetensors(metadata: Mapping[str, str])`.
@@ -189,7 +186,7 @@ def test_schema_accepts_v1_bagel():
 
 - [ ] **Step 2: Run schema tests and confirm failure**
 
-Run: `pytest tests/conversion/test_schema.py -v`
+Run: `pytest tests/unit/test_converted_format.py -v`
 
 Expected: FAIL because `ConvertedBagelMetadata` is undefined.
 
@@ -216,7 +213,7 @@ def map_state_dict(source: Mapping[str, torch.Tensor]) -> dict[str, torch.Tensor
 
 - [ ] **Step 6: Add a tiny-shard conversion CLI test**
 
-Create temporary safetensors shards and an index JSON. Invoke `python -m comfyui_bagel.conversion.convert` and assert one output file, v1 metadata, a JSON manifest, stable sorted keys, and matching SHA-256.
+Create temporary safetensors shards and an index JSON. Invoke `python scripts/convert_bagel_model.py` and assert one output file, v1 metadata, a JSON manifest, stable sorted keys, and matching SHA-256.
 
 - [ ] **Step 7: Implement streaming conversion and manifest emission**
 
@@ -224,29 +221,26 @@ The CLI accepts `--source`, `--output`, `--variant`, and `--dtype`. It refuses t
 
 - [ ] **Step 8: Run conversion tests**
 
-Run: `pytest tests/conversion -v`
+Run: `pytest tests/unit/test_converted_format.py tests/unit/test_model_conversion.py -v`
 
 Expected: all PASS using only tiny synthetic tensors.
 
 - [ ] **Step 9: Stop for Codex review, then commit after approval**
 
 ```bash
-git add comfyui_bagel/conversion tests/conversion
+git add modeling/bagel/converted_format.py scripts/convert_bagel_model.py tests/unit
 git commit -m "feat: add BAGEL safetensors converter"
 ```
 
 ### Task 3: Tokenizer, Variant Types, and Structural Registry
 
 **Files:**
-- Create: `comfyui_bagel/types.py`
-- Create: `comfyui_bagel/tokenizers/__init__.py`
-- Create: `comfyui_bagel/tokenizers/bagel.py`
-- Create: `comfyui_bagel/tokenizers/qwen2_bagel/*`
-- Create: `comfyui_bagel/models/variants/base.py`
-- Create: `comfyui_bagel/models/variants/registry.py`
-- Create: `comfyui_bagel/models/variants/bagel.py`
-- Create: `tests/tokenizers/test_bagel_tokenizer.py`
-- Create: `tests/models/test_variant_registry.py`
+- Create: `modeling/bagel/model_types.py`
+- Create: `modeling/bagel/variants.py`
+- Create: `modeling/qwen2/bagel_tokenizer.py`
+- Create: `modeling/qwen2/tokenizer/*`
+- Create: `tests/unit/test_bagel_tokenizer.py`
+- Create: `tests/unit/test_variant_registry.py`
 
 **Interfaces:**
 - Produces: `BagelCapabilities(generate: bool, edit: bool, understand: bool, multi_image_edit: bool)`.
@@ -256,7 +250,7 @@ git commit -m "feat: add BAGEL safetensors converter"
 
 - [ ] **Step 1: Copy tokenizer assets from the immutable BAGEL source revision**
 
-Record the source revision and SHA-256 hashes in `comfyui_bagel/tokenizers/qwen2_bagel/MANIFEST.json`. Do not use mutable network downloads at runtime.
+Record the source revision and SHA-256 hashes in `modeling/qwen2/tokenizer/MANIFEST.json`. Do not use mutable network downloads at runtime.
 
 - [ ] **Step 2: Write tokenizer fingerprint and token-ID tests**
 
@@ -283,26 +277,27 @@ Detection must use converted metadata plus required structural keys, never repos
 
 - [ ] **Step 6: Run tests**
 
-Run: `pytest tests/tokenizers tests/models/test_variant_registry.py -v`
+Run: `pytest tests/unit/test_bagel_tokenizer.py tests/unit/test_variant_registry.py -v`
 
 Expected: all PASS.
 
 - [ ] **Step 7: Stop for review, then commit after approval**
 
 ```bash
-git add comfyui_bagel/types.py comfyui_bagel/tokenizers comfyui_bagel/models/variants tests/tokenizers tests/models
+git add modeling/bagel/model_types.py modeling/bagel/variants.py modeling/qwen2/bagel_tokenizer.py modeling/qwen2/tokenizer tests/unit
 git commit -m "feat: add BAGEL tokenizer and variant registry"
 ```
 
 ### Task 4: ComfyUI Patcher, Converted Model Loader, and Native Loader Node
 
 **Files:**
-- Create: `comfyui_bagel/models/patcher.py`
-- Create: `comfyui_bagel/models/loader.py`
-- Create: `comfyui_bagel/nodes/loaders.py`
-- Modify: `comfyui_bagel/node_registry.py`
-- Create: `tests/models/test_loader.py`
-- Create: `tests/nodes/test_loader_node.py`
+- Create: `modeling/bagel/model_patcher.py`
+- Create: `modeling/bagel/model_loader.py`
+- Create: `nodes_model_loading.py`
+- Modify: `__init__.py`
+- Create: `tests/unit/test_model_loader.py`
+- Create: `tests/unit/test_model_patcher.py`
+- Create: `tests/workflows/test_loader_node.py`
 
 **Interfaces:**
 - Produces: `BagelModelHandle(model, patcher, tokenizer, config, variant, checkpoint_path, cache_key)`.
@@ -334,8 +329,8 @@ Inputs: converted model name, weight dtype, load-device choice, and advanced att
 Run:
 
 ```bash
-pytest tests/models/test_loader.py tests/nodes/test_loader_node.py -v
-python -m compileall -q comfyui_bagel
+pytest tests/unit/test_model_loader.py tests/unit/test_model_patcher.py tests/workflows/test_loader_node.py -v
+python -m compileall -q nodes_model_loading.py modeling
 ```
 
 Expected: all PASS and no compile output.
@@ -343,18 +338,17 @@ Expected: all PASS and no compile output.
 - [ ] **Step 7: Stop for review, then commit after approval**
 
 ```bash
-git add comfyui_bagel/models comfyui_bagel/nodes comfyui_bagel/node_registry.py tests/models tests/nodes
+git add modeling/bagel/model_patcher.py modeling/bagel/model_loader.py nodes_model_loading.py __init__.py tests
 git commit -m "feat: load converted BAGEL models natively"
 ```
 
 ### Task 5: VAE-Free Latent Runtime
 
 **Files:**
-- Create: `comfyui_bagel/runtime/__init__.py`
-- Create: `comfyui_bagel/runtime/latent.py`
-- Create: `comfyui_bagel/runtime/inference.py`
-- Create: `tests/runtime/test_latent.py`
-- Create: `tests/runtime/test_inference_contract.py`
+- Create: `modeling/bagel/latent.py`
+- Create: `runtime.py`
+- Create: `tests/unit/test_latent.py`
+- Create: `tests/unit/test_runtime.py`
 
 **Interfaces:**
 - Produces: `patchify_flux_latent(samples: Tensor, patch_size: int) -> Tensor`.
@@ -381,30 +375,29 @@ Move KV-context, text, vision, sampling, and latent unpacking into `BagelRuntime
 
 - [ ] **Step 5: Run runtime tests**
 
-Run: `pytest tests/runtime -v`
+Run: `pytest tests/unit/test_latent.py tests/unit/test_runtime.py -v`
 
 Expected: all PASS.
 
 - [ ] **Step 6: Stop for review, then commit after approval**
 
 ```bash
-git add comfyui_bagel/runtime tests/runtime
+git add modeling/bagel/latent.py runtime.py tests/unit
 git commit -m "feat: add VAE-free BAGEL latent runtime"
 ```
 
 ### Task 6: Native Generate, Edit, and Understand Nodes
 
 **Files:**
-- Create: `comfyui_bagel/nodes/generation.py`
-- Create: `comfyui_bagel/nodes/editing.py`
-- Create: `comfyui_bagel/nodes/understanding.py`
-- Modify: `comfyui_bagel/node_registry.py`
-- Create: `tests/nodes/test_generation.py`
-- Create: `tests/nodes/test_editing.py`
-- Create: `tests/nodes/test_understanding.py`
-- Create: `example_workflows/native/bagel_text_to_image.json`
-- Create: `example_workflows/native/bagel_image_edit.json`
-- Create: `example_workflows/native/bagel_image_understanding.json`
+- Create: `nodes_generation.py`
+- Modify: `__init__.py`
+- Create: `tests/workflows/test_generation_node.py`
+- Create: `tests/workflows/test_editing_node.py`
+- Create: `tests/workflows/test_understanding_node.py`
+- Create: `tests/workflows/test_native_workflows.py`
+- Create: `example_workflows/bagel_native_text_to_image.json`
+- Create: `example_workflows/bagel_native_image_edit.json`
+- Create: `example_workflows/bagel_native_image_understanding.json`
 
 **Interfaces:**
 - Produces `BagelNativeGenerate`: `BAGEL_MODEL -> (LATENT, STRING)`.
@@ -433,27 +426,26 @@ Use stable node class types and no machine-specific absolute paths.
 
 - [ ] **Step 5: Run node and workflow tests**
 
-Run: `pytest tests/nodes -v`
+Run: `pytest tests/workflows/test_generation_node.py tests/workflows/test_editing_node.py tests/workflows/test_understanding_node.py tests/workflows/test_native_workflows.py -v`
 
 Expected: all PASS.
 
 - [ ] **Step 6: Stop for review, then commit after approval**
 
 ```bash
-git add comfyui_bagel/nodes comfyui_bagel/node_registry.py tests/nodes example_workflows/native
+git add nodes_generation.py __init__.py tests/workflows example_workflows
 git commit -m "feat: add native BAGEL workflow nodes"
 ```
 
 ### Task 7: Legacy Compatibility Layer and Regression Tests
 
 **Files:**
-- Create: `comfyui_bagel/nodes/legacy.py`
 - Modify: `nodes.py`
 - Modify: `inferencer.py`
-- Modify: `comfyui_bagel/node_registry.py`
-- Create: `tests/legacy/test_node_contracts.py`
-- Create: `tests/legacy/test_model_discovery.py`
-- Create: `tests/legacy/test_workflows.py`
+- Modify: `__init__.py`
+- Create: `tests/workflows/test_legacy_node_contracts.py`
+- Create: `tests/workflows/test_legacy_model_discovery.py`
+- Create: `tests/workflows/test_legacy_workflows.py`
 
 **Interfaces:**
 - Consumes: all current public legacy class types and the native internal services where behavior matches.
@@ -490,20 +482,18 @@ Expected: all tests PASS, no compile errors, no whitespace errors.
 - [ ] **Step 6: Stop for review, then commit after approval**
 
 ```bash
-git add comfyui_bagel/nodes/legacy.py comfyui_bagel/node_registry.py nodes.py inferencer.py tests/legacy
+git add nodes.py inferencer.py __init__.py tests/workflows
 git commit -m "refactor: preserve legacy BAGEL workflows"
 ```
 
 ### Task 8: DF11, RecA, and Capability Matrix
 
 **Files:**
-- Create: `comfyui_bagel/models/variants/df11.py`
-- Create: `comfyui_bagel/models/variants/reca.py`
-- Modify: `comfyui_bagel/models/variants/registry.py`
+- Modify: `modeling/bagel/variants.py`
 - Create: `docs/compatibility.md`
-- Create: `tests/models/test_df11_adapter.py`
-- Create: `tests/models/test_reca_adapter.py`
-- Create: `tests/models/test_capability_matrix.py`
+- Create: `tests/unit/test_df11_adapter.py`
+- Create: `tests/unit/test_reca_adapter.py`
+- Create: `tests/unit/test_capability_matrix.py`
 
 **Interfaces:**
 - Produces structural adapters with the same protocol defined in Task 3.
@@ -531,14 +521,14 @@ The documentation test fails if a registered adapter is absent from `docs/compat
 
 - [ ] **Step 6: Run adapter tests**
 
-Run: `pytest tests/models/test_df11_adapter.py tests/models/test_reca_adapter.py tests/models/test_capability_matrix.py -v`
+Run: `pytest tests/unit/test_df11_adapter.py tests/unit/test_reca_adapter.py tests/unit/test_capability_matrix.py -v`
 
 Expected: all PASS without requiring GPU or optional DF11 installation.
 
 - [ ] **Step 7: Stop for review, then commit after approval**
 
 ```bash
-git add comfyui_bagel/models/variants docs/compatibility.md tests/models
+git add modeling/bagel/variants.py docs/compatibility.md tests/unit
 git commit -m "feat: add BAGEL variant adapters"
 ```
 
@@ -579,7 +569,7 @@ Run:
 ```bash
 pytest tests -v
 python -m build
-python -m compileall -q comfyui_bagel
+python -m compileall -q nodes.py nodes_model_loading.py nodes_generation.py inferencer.py runtime.py modeling
 git diff --check
 git status --short
 ```
@@ -689,4 +679,3 @@ git push origin comfyui-native-migration
 - [ ] Legacy nodes and `models/bagel` still work.
 - [ ] AutoDL generation, editing, understanding, and legacy regression evidence is committed.
 - [ ] DF11 and RecA documentation matches actual validation status.
-
