@@ -272,6 +272,12 @@ Logs include the detected variant, converted-format version, selected dtype, pat
 
 ## 12. Verification Strategy
 
+### 12.0 Environment constraints
+
+The local Mac is not a valid real-import environment for this repository. Importing legacy `nodes.py` reaches the CUDA-only `dfloat11 -> cupy` chain, and the base local PyTorch installation is not reliable. Local tests must therefore isolate pure logic or install explicit `conftest.py` module stubs before importing the custom-node entrypoint. A passing stubbed import is a contract test, not evidence that CUDA dependencies work.
+
+Modal CPU is a second stubbed integration environment. It must not build `flash_attn` from source: observed build time exceeds 30 minutes and provides no useful CPU-runtime evidence. Modal test images replace `flash_attn`, CUDA-only quantization modules, and other unavailable accelerator packages with import-compatible stubs. Only AutoDL with the selected CUDA ComfyUI environment is permitted to claim real dependency, import, model-load, or workflow success.
+
 ### 12.1 Unit tests
 
 - conversion key mapping and metadata;
@@ -289,6 +295,8 @@ Logs include the detected variant, converted-format version, selected dtype, pat
 - converted-file filtering under `diffusion_models`;
 - legacy example workflow parsing;
 - absence of import-time optional-backend failures.
+
+Run these checks locally and in the Modal CPU harness with documented stubs. Do not interpret them as CUDA acceptance.
 
 ### 12.3 GPU smoke tests
 
@@ -337,6 +345,8 @@ AutoDL acceptance procedure:
 10. Run at least one legacy workflow regression.
 11. Validate BAGEL BF16 first. Validate DF11 and RecA when their converted weights are available.
 12. Commit reviewed acceptance evidence to the branch.
+
+AutoDL is the first environment that must import the custom node without dependency stubs. A stubbed local or Modal pass cannot replace this gate.
 
 Release requires a pushed Fork branch, clean installation from that branch, three passing native workflows, one passing legacy workflow, and matching converted-file hashes. Unavailable experimental variants do not block release when they are labeled accurately.
 

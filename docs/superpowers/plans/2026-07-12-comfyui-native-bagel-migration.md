@@ -23,6 +23,9 @@
 - Do not call ComfyUI global `unload_all_models()` from a loader.
 - BAGEL-7B-MoT BF16 is the first required runtime target. DF11 and RecA follow through variant adapters.
 - Before AutoDL access, state why remote CUDA is required, the commands to run, and the remote files that will change.
+- Never require a real local Mac import of legacy `nodes.py`; local PyTorch is damaged and `dfloat11 -> cupy` is CUDA-only. Import-contract tests must install explicit stubs first.
+- Modal CPU tests use dependency stubs and must not compile `flash_attn`; a source build has exceeded 30 minutes and is outside the useful test budget.
+- Only AutoDL may provide real, unstubbed ComfyUI import, CUDA dependency, model-loading, and workflow evidence.
 
 ## Target File Map
 
@@ -41,6 +44,7 @@
 - `modeling/qwen2/bagel_tokenizer.py`: tokenizer construction and fingerprint checks.
 - `modeling/qwen2/tokenizer/`: source-packaged tokenizer assets.
 - `scripts/convert_bagel_model.py`: offline raw-to-converted CLI.
+- `scripts/modal_test_harness.py`: reproducible Modal CPU image and stubbed pytest runner.
 - `tests/unit/`: pure Python, schema, tokenizer, latent, and meta-device tests.
 - `tests/workflows/`: node-contract and workflow JSON regression tests.
 - `tests/fixtures/`: small metadata and key-layout fixtures; never model weights.
@@ -56,11 +60,13 @@ Do not create a `comfyui_bagel/` directory. This repository root is already the 
 **Files:**
 - Create: `tests/conftest.py`
 - Create: `tests/unit/test_node_registration.py`
+- Create: `scripts/modal_test_harness.py`
 - Install after approval: project-local ComfyUI custom-node skills under `.agents/skills/`
 
 **Interfaces:**
 - Consumes: existing `NODE_CLASS_MAPPINGS` and `NODE_DISPLAY_NAME_MAPPINGS` from `nodes.py`.
-- Produces: a test harness that imports the repository root as a ComfyUI custom-node package and verifies the existing mappings unchanged.
+- Produces: a stubbed test harness that imports the repository root as a ComfyUI custom-node package and verifies mappings without claiming real CUDA dependency compatibility.
+- Produces: a Modal CPU harness that installs test-only dependencies, injects the same accelerator stubs, and never builds `flash_attn`.
 
 - [ ] **Step 1: Create and switch to the implementation branch**
 
@@ -112,6 +118,9 @@ def install_fake_comfy_modules(monkeypatch):
     # Add each explicit stub when the failing import identifies it. Runtime
     # behavior covered by an assertion must use a purpose-built fake instead.
 
+def install_accelerator_stubs(monkeypatch):
+    """Stub dfloat11, cupy, flash_attn, and CUDA-only optional imports."""
+
 @pytest.fixture
 def custom_node_module(monkeypatch):
     install_fake_comfy_modules(monkeypatch)
@@ -127,7 +136,17 @@ def custom_node_module(monkeypatch):
 
 `install_fake_comfy_modules` supplies only the APIs needed during import. Do not create a second application package or change root mappings in this task.
 
-- [ ] **Step 6: Run package and existing syntax checks**
+`install_accelerator_stubs` must run before loading the root module. The test name and output must say `stubbed_import`; it is not a real environment smoke test.
+
+- [ ] **Step 6: Add the Modal CPU stub harness**
+
+The Modal image installs the package's pure-Python test dependencies but excludes `flash_attn`, `dfloat11`, CuPy, and GPU wheels. The remote function runs only `tests/unit` and `tests/workflows` tests marked `stubbed` or `cpu`. Set a finite timeout and fail if a dependency build starts.
+
+Run: `modal run scripts/modal_test_harness.py`
+
+Expected: pytest completes with the same stubbed import contract as local tests; logs contain no `Building wheel for flash-attn` line.
+
+- [ ] **Step 7: Run local stubbed and syntax checks**
 
 Run:
 
@@ -137,16 +156,16 @@ python -m compileall -q nodes.py inferencer.py modeling tests
 git diff --check
 ```
 
-Expected: PASS, no compile output, no whitespace errors.
+Expected: PASS with the test explicitly labeled stubbed, no compile output, no whitespace errors. Do not attempt an unstubbed `python -c 'import nodes'` on Mac.
 
-- [ ] **Step 7: Stop for Codex review**
+- [ ] **Step 8: Stop for Codex review**
 
 Provide `git diff`, test output, and the list of installed skill files. Do not commit.
 
-- [ ] **Step 8: Commit after Codex approval**
+- [ ] **Step 9: Commit after Codex approval**
 
 ```bash
-git add .agents/skills tests
+git add .agents/skills tests scripts/modal_test_harness.py
 git commit -m "test: add custom node test harness"
 ```
 
@@ -623,6 +642,8 @@ Record GPU model, ComfyUI revision, Python/PyTorch/CUDA versions, remote checkou
 Clone or update the custom node from the Fork branch, install declared requirements in the ComfyUI Python environment, and start ComfyUI with logs captured.
 
 Expected: no `IMPORT FAILED` entry for ComfyUI-BAGEL.
+
+This is the first required unstubbed import. Do not copy local or Modal stub modules into the AutoDL checkout.
 
 - [ ] **Step 5: Verify node registration**
 
