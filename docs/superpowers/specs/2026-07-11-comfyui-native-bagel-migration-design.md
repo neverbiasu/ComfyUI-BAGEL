@@ -355,14 +355,12 @@ Release requires a pushed Fork branch, clean installation from that branch, thre
 ```text
 ComfyUI-BAGEL/
 ├── __init__.py
-├── nodes/
-│   ├── __init__.py                # combines legacy and native mappings
-│   ├── common.py                  # node-only validation and conversion helpers
-│   ├── loaders.py                 # converted BAGEL loader node
-│   ├── generation.py              # native text-to-image node
-│   ├── editing.py                 # native image-edit node
-│   ├── understanding.py           # native image-understanding node
-│   └── legacy.py                  # unchanged public contracts from old nodes.py
+├── nodes.py                       # existing/legacy nodes and public mapping aggregation
+├── nodes_model_loading.py         # converted BAGEL loader node
+├── nodes_generation.py            # native text-to-image node
+├── nodes_editing.py               # native image-edit node
+├── nodes_understanding.py         # native image-understanding node
+├── nodes_common.py                # node-only validation and conversion helpers
 ├── inferencer.py                  # legacy image-returning inference path
 ├── runtime.py                     # native VAE-free BAGEL runtime
 ├── modeling/
@@ -387,9 +385,7 @@ ComfyUI-BAGEL/
     └── native files
 ```
 
-Do not introduce a second application package. The repository directory is already the ComfyUI custom-node package, and its root `__init__.py` is ComfyUI's entrypoint. Replace the current `nodes.py` module with a `nodes/` package in one reviewed migration: `nodes/legacy.py` preserves old classes, while focused native modules expose new nodes. `nodes/__init__.py` is the only mapping aggregation point.
-
-The old `nodes.py` file and the new `nodes/` directory must not coexist after the migration commit. Saved ComfyUI workflows depend on registered class types, not the Python source filename; compatibility is therefore proven by an exact mapping/contract snapshot before and after the move.
+Do not introduce a second application package or a `nodes/` directory. Follow WanVideoWrapper's layout: keep root `nodes.py` and root `__init__.py`, add focused root-level `nodes_*.py` modules, and aggregate their mappings from `nodes.py` or `__init__.py`. Existing classes remain in `nodes.py` until an independently justified refactor; the native migration does not require moving them.
 
 Tests live in a root `tests/` directory, following Nunchaku's Python test layout. Workflow fixtures and graph assertions follow VideoHelperSuite's root-level workflow regression pattern. Tests must not require installing the repository as a differently named Python package; `tests/conftest.py` loads the custom-node root with the same package context ComfyUI uses.
 

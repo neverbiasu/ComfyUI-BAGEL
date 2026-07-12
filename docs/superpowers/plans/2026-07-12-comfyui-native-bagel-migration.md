@@ -29,14 +29,13 @@
 
 ## Target File Map
 
-- `__init__.py`: ComfyUI custom-node entrypoint; re-exports mappings from `nodes`.
-- `nodes/__init__.py`: sole aggregation point for legacy and native mappings.
-- `nodes/common.py`: node-only validation and tensor/image conversion helpers.
-- `nodes/loaders.py`: converted BAGEL loader node.
-- `nodes/generation.py`: native generation node.
-- `nodes/editing.py`: native editing node.
-- `nodes/understanding.py`: native understanding node.
-- `nodes/legacy.py`: existing legacy node definitions with unchanged contracts.
+- `__init__.py`: ComfyUI custom-node entrypoint and public mapping export.
+- `nodes.py`: existing/legacy node definitions and mapping aggregation.
+- `nodes_common.py`: node-only validation and tensor/image conversion helpers.
+- `nodes_model_loading.py`: converted BAGEL loader node.
+- `nodes_generation.py`: native generation node.
+- `nodes_editing.py`: native editing node.
+- `nodes_understanding.py`: native understanding node.
 - `runtime.py`: VAE-free generation/editing/understanding runtime.
 - `inferencer.py`: legacy image-returning inference path.
 - `modeling/bagel/model_types.py`: immutable model, variant, capability, and runtime value types.
@@ -55,7 +54,7 @@
 - `example_workflows/`: existing legacy workflows plus native workflow JSON files.
 - `docs/validation/`: local and AutoDL evidence.
 
-Do not create a `comfyui_bagel/` directory. This repository root is already the custom-node Python package. Replace `nodes.py` with a focused `nodes/` package in one reviewed commit; never leave both import targets in the final tree. Keep architecture code in the existing `modeling/` tree. Root `tests/` follows Nunchaku; workflow JSON regression follows VideoHelperSuite.
+Do not create a `comfyui_bagel/` or `nodes/` directory. This repository root is already the custom-node Python package. Follow WanVideoWrapper by retaining root `nodes.py` and adding focused root `nodes_*.py` modules. Keep architecture code in the existing `modeling/` tree. Root `tests/` follows Nunchaku; workflow JSON regression follows VideoHelperSuite.
 
 ---
 
@@ -316,10 +315,8 @@ git commit -m "feat: add BAGEL tokenizer and variant registry"
 **Files:**
 - Create: `modeling/bagel/model_patcher.py`
 - Create: `modeling/bagel/model_loader.py`
-- Delete: `nodes.py` after moving its contents
-- Create: `nodes/legacy.py`
-- Create: `nodes/loaders.py`
-- Create: `nodes/__init__.py`
+- Create: `nodes_model_loading.py`
+- Modify: `nodes.py`
 - Modify: `__init__.py`
 - Create: `tests/unit/test_model_loader.py`
 - Create: `tests/unit/test_model_patcher.py`
@@ -334,7 +331,7 @@ git commit -m "feat: add BAGEL tokenizer and variant registry"
 
 Mock `folder_paths.get_filename_list("diffusion_models")`. Assert the node shows only files whose headers declare `format=comfyui_bagel`, and that a raw model produces a conversion-specific error.
 
-Before moving files, snapshot every existing class type and its public `INPUT_TYPES`, return types/names, function, and category. The same test must pass after `nodes.py` becomes `nodes/legacy.py`.
+Snapshot every existing class type and its public `INPUT_TYPES`, return types/names, function, and category. The same test must pass after the native loader mapping is added.
 
 - [ ] **Step 2: Write lifecycle tests with fake ComfyUI modules**
 
@@ -352,7 +349,7 @@ Read metadata before tensor allocation, detect the adapter, construct on meta de
 
 Inputs: converted model name, weight dtype, load-device choice, and advanced attention option. No auto-download field. Register under `BAGEL/Native` while leaving all old mappings unchanged.
 
-In the same working tree, move legacy definitions into `nodes/legacy.py`, create `nodes/__init__.py` to aggregate mappings, update root `__init__.py`, and remove root `nodes.py`. Do not stop or commit while both `nodes.py` and `nodes/` exist.
+Import and merge the native loader mapping from root `nodes_model_loading.py` while preserving every existing mapping in root `nodes.py`. Keep root `__init__.py` exporting the combined mappings.
 
 - [ ] **Step 6: Run tests**
 
@@ -360,7 +357,7 @@ Run:
 
 ```bash
 pytest tests/unit/test_model_loader.py tests/unit/test_model_patcher.py tests/workflows/test_loader_node.py -v
-python -m compileall -q nodes modeling
+python -m compileall -q nodes.py nodes_model_loading.py modeling
 ```
 
 Expected: all PASS and no compile output.
@@ -368,7 +365,7 @@ Expected: all PASS and no compile output.
 - [ ] **Step 7: Stop for review, then commit after approval**
 
 ```bash
-git add -A modeling/bagel/model_patcher.py modeling/bagel/model_loader.py nodes.py nodes __init__.py tests
+git add modeling/bagel/model_patcher.py modeling/bagel/model_loader.py nodes_model_loading.py nodes.py __init__.py tests
 git commit -m "feat: load converted BAGEL models natively"
 ```
 
@@ -419,11 +416,12 @@ git commit -m "feat: add VAE-free BAGEL latent runtime"
 ### Task 6: Native Generate, Edit, and Understand Nodes
 
 **Files:**
-- Create: `nodes/common.py`
-- Create: `nodes/generation.py`
-- Create: `nodes/editing.py`
-- Create: `nodes/understanding.py`
-- Modify: `nodes/__init__.py`
+- Create: `nodes_common.py`
+- Create: `nodes_generation.py`
+- Create: `nodes_editing.py`
+- Create: `nodes_understanding.py`
+- Modify: `nodes.py`
+- Modify: `__init__.py`
 - Create: `tests/workflows/test_generation_node.py`
 - Create: `tests/workflows/test_editing_node.py`
 - Create: `tests/workflows/test_understanding_node.py`
@@ -466,15 +464,14 @@ Expected: all PASS.
 - [ ] **Step 6: Stop for review, then commit after approval**
 
 ```bash
-git add nodes/common.py nodes/generation.py nodes/editing.py nodes/understanding.py nodes/__init__.py tests/workflows example_workflows
+git add nodes_common.py nodes_generation.py nodes_editing.py nodes_understanding.py nodes.py __init__.py tests/workflows example_workflows
 git commit -m "feat: add native BAGEL workflow nodes"
 ```
 
-### Task 7: Legacy Compatibility Facades and Regression Workflows
+### Task 7: Legacy Compatibility Regression Workflows
 
 **Files:**
-- Modify: `nodes/legacy.py`
-- Modify: `nodes/__init__.py`
+- Modify: `nodes.py`
 - Modify: `inferencer.py`
 - Modify: `__init__.py`
 - Create: `tests/workflows/test_legacy_node_contracts.py`
@@ -495,7 +492,7 @@ Commit the snapshot fixture content as part of this task only after it proves th
 
 Assert `models/bagel/<repo-layout>` remains discoverable and the native `diffusion_models` scan does not hide or move legacy folders.
 
-- [ ] **Step 3: Implement compatibility facades**
+- [ ] **Step 3: Add compatibility facades only where native internals are reused**
 
 Keep old image-returning behavior, including internal VAE decode, because changing it would corrupt saved workflow links. Delegate shared validation and sampling helpers where semantics are identical.
 
@@ -518,7 +515,7 @@ Expected: all tests PASS, no compile errors, no whitespace errors.
 - [ ] **Step 6: Stop for review, then commit after approval**
 
 ```bash
-git add nodes/legacy.py nodes/__init__.py inferencer.py __init__.py tests/workflows
+git add nodes.py inferencer.py __init__.py tests/workflows
 git commit -m "refactor: preserve legacy BAGEL workflows"
 ```
 
@@ -605,7 +602,7 @@ Run:
 ```bash
 pytest tests -v
 python -m build
-python -m compileall -q nodes inferencer.py runtime.py modeling
+python -m compileall -q nodes.py nodes_common.py nodes_model_loading.py nodes_generation.py nodes_editing.py nodes_understanding.py inferencer.py runtime.py modeling
 git diff --check
 git status --short
 ```
