@@ -1,0 +1,276 @@
+{
+  "id": "3fa96181-e113-4145-ab50-238e8d4aa26b",
+  "revision": 0,
+  "last_node_id": 17,
+  "last_link_id": 19,
+  "nodes": [
+    {
+      "id": 13,
+      "type": "PreviewImage",
+      "pos": [
+        865,
+        80
+      ],
+      "size": [
+        210,
+        246
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 18
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.30",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 14,
+      "type": "ShowText|pysssss",
+      "pos": [
+        873.99853515625,
+        383.1902160644531
+      ],
+      "size": [
+        295.75439453125,
+        252.52635192871094
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "text",
+          "name": "text",
+          "type": "STRING",
+          "link": 19
+        }
+      ],
+      "outputs": [
+        {
+          "label": "STRING",
+          "name": "STRING",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-custom-scripts",
+        "ver": "1.2.5",
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [
+        "<think>\nTo achieve the Ghibli style, the image's color palette and texture should be adjusted to resemble the hand-drawn, vibrant, and slightly muted tones typical of Studio Ghibli films. The background and hair should retain their structure but be softened and stylized to mimic the hand-drawn aesthetic. The lighting and shadows should be more pronounced to give a textured, artistic feel.\n</think>"
+      ]
+    },
+    {
+      "id": 16,
+      "type": "BagelModelLoader",
+      "pos": [
+        50,
+        80
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "label": "model",
+          "name": "model",
+          "type": "BAGEL_MODEL",
+          "links": [
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-bagel",
+        "ver": "f519eb11210937f0bce9c4df1d96848d32349652",
+        "Node name for S&R": "BagelModelLoader"
+      },
+      "widgets_values": [
+        "DFloat11/BAGEL-7B-MoT-DF11",
+        "BF16",
+        "BF16"
+      ]
+    },
+    {
+      "id": 12,
+      "type": "LoadImage",
+      "pos": [
+        50,
+        266
+      ],
+      "size": [
+        315,
+        314
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "label": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            17
+          ]
+        },
+        {
+          "label": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.30",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "woman.jpg",
+        "image"
+      ]
+    },
+    {
+      "id": 17,
+      "type": "BagelImageEdit",
+      "pos": [
+        415,
+        80
+      ],
+      "size": [
+        400,
+        372
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "model",
+          "name": "model",
+          "type": "BAGEL_MODEL",
+          "link": 16
+        },
+        {
+          "label": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 17
+        }
+      ],
+      "outputs": [
+        {
+          "label": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            18
+          ]
+        },
+        {
+          "label": "thinking",
+          "name": "thinking",
+          "type": "STRING",
+          "links": [
+            19
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-bagel",
+        "ver": "f519eb11210937f0bce9c4df1d96848d32349652",
+        "Node name for S&R": "BagelImageEdit"
+      },
+      "widgets_values": [
+        "She boards a modern subway, quietly reading a folded newspaper, wearing the same clothes.",
+        697672,
+        "randomize",
+        4,
+        2,
+        50,
+        true,
+        0,
+        3,
+        0,
+        "text_channel",
+        0.3,
+        [
+          false,
+          true
+        ]
+      ]
+    }
+  ],
+  "links": [
+    [
+      16,
+      16,
+      0,
+      17,
+      0,
+      "BAGEL_MODEL"
+    ],
+    [
+      17,
+      12,
+      0,
+      17,
+      1,
+      "IMAGE"
+    ],
+    [
+      18,
+      17,
+      0,
+      13,
+      0,
+      "IMAGE"
+    ],
+    [
+      19,
+      17,
+      1,
+      14,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.9646149645000008,
+      "offset": [
+        50,
+        20
+      ]
+    },
+    "frontendVersion": "1.25.10",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

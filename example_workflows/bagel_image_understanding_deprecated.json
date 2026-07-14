@@ -1,0 +1,225 @@
+{
+  "id": "832f71f8-5d24-4b6f-bef8-35e3d8c796cb",
+  "revision": 0,
+  "last_node_id": 4,
+  "last_link_id": 3,
+  "nodes": [
+    {
+      "id": 4,
+      "type": "ShowText|pysssss",
+      "pos": [
+        1015,
+        130
+      ],
+      "size": [
+        253.62852478027344,
+        331.75177001953125
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "text",
+          "name": "text",
+          "type": "STRING",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "label": "STRING",
+          "name": "STRING",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-custom-scripts",
+        "ver": "1.2.5",
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [
+        "The humor in this meme comes from the exaggerated change in handwriting style as the exam progresses. At the beginning, the handwriting is clear and legible, indicating a confident and well-prepared student. However, as the exam continues, the handwriting becomes increasingly difficult to read, suggesting that the student is becoming more anxious and less focused. The final part of the meme shows an electrocardiogram (ECG) line, which humorously implies that the student's heart rate is racing and their writing is becoming erratic, much like the fluctuations in an ECG reading. This visual representation of stress and anxiety in the final pages of an exam is what makes the meme funny."
+      ]
+    },
+    {
+      "id": 2,
+      "type": "BagelImageUnderstanding",
+      "pos": [
+        515,
+        130
+      ],
+      "size": [
+        400,
+        204
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "model",
+          "name": "model",
+          "type": "BAGEL_MODEL",
+          "link": 1
+        },
+        {
+          "label": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "label": "text",
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-bagel",
+        "ver": "4bb49e5232604e4838463f130b3ba7026e428c1d",
+        "Node name for S&R": "BagelImageUnderstanding",
+        "aux_id": "neverbiasu/ComfyUI-Bagel"
+      },
+      "widgets_values": [
+        "Can someone explain what's funny about this meme??",
+        false,
+        false,
+        0.3,
+        512,
+        [
+          false,
+          true
+        ]
+      ]
+    },
+    {
+      "id": 1,
+      "type": "BagelModelLoader",
+      "pos": [
+        100,
+        130
+      ],
+      "size": [
+        315,
+        106
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "label": "model",
+          "name": "model",
+          "type": "BAGEL_MODEL",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-bagel",
+        "ver": "4bb49e5232604e4838463f130b3ba7026e428c1d",
+        "Node name for S&R": "BagelModelLoader",
+        "aux_id": "neverbiasu/ComfyUI-Bagel"
+      },
+      "widgets_values": [
+        "DFloat11/BAGEL-7B-MoT-DF11",
+        "BF16",
+        "BF16"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "LoadImage",
+      "pos": [
+        100,
+        318
+      ],
+      "size": [
+        315,
+        314
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "label": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        },
+        {
+          "label": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.30",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "meme.jpg",
+        "image"
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "BAGEL_MODEL"
+    ],
+    [
+      2,
+      3,
+      0,
+      2,
+      1,
+      "IMAGE"
+    ],
+    [
+      3,
+      2,
+      0,
+      4,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.9646149645000006,
+      "offset": [
+        0,
+        -30
+      ]
+    },
+    "frontendVersion": "1.25.10",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

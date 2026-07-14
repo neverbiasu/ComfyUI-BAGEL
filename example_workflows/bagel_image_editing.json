@@ -1,89 +1,19 @@
 {
   "id": "3fa96181-e113-4145-ab50-238e8d4aa26b",
   "revision": 0,
-  "last_node_id": 17,
-  "last_link_id": 19,
+  "last_node_id": 25,
+  "last_link_id": 31,
   "nodes": [
     {
-      "id": 13,
-      "type": "PreviewImage",
+      "id": 18,
+      "type": "BAGELModelLoader",
       "pos": [
-        865,
-        80
+        14.01953125,
+        53.0703125
       ],
       "size": [
-        210,
-        246
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "images",
-          "name": "images",
-          "type": "IMAGE",
-          "link": 18
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.30",
-        "Node name for S&R": "PreviewImage"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 14,
-      "type": "ShowText|pysssss",
-      "pos": [
-        873.99853515625,
-        383.1902160644531
-      ],
-      "size": [
-        295.75439453125,
-        252.52635192871094
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "text",
-          "name": "text",
-          "type": "STRING",
-          "link": 19
-        }
-      ],
-      "outputs": [
-        {
-          "label": "STRING",
-          "name": "STRING",
-          "shape": 6,
-          "type": "STRING",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfyui-custom-scripts",
-        "ver": "1.2.5",
-        "Node name for S&R": "ShowText|pysssss"
-      },
-      "widgets_values": [
-        "<think>\nTo achieve the Ghibli style, the image's color palette and texture should be adjusted to resemble the hand-drawn, vibrant, and slightly muted tones typical of Studio Ghibli films. The background and hair should retain their structure but be softened and stylized to mimic the hand-drawn aesthetic. The lighting and shadows should be more pronounced to give a textured, artistic feel.\n</think>"
-      ]
-    },
-    {
-      "id": 16,
-      "type": "BagelModelLoader",
-      "pos": [
-        50,
-        80
-      ],
-      "size": [
-        270,
-        106
+        288.9888610839844,
+        58
       ],
       "flags": {},
       "order": 0,
@@ -91,31 +21,66 @@
       "inputs": [],
       "outputs": [
         {
-          "label": "model",
           "name": "model",
           "type": "BAGEL_MODEL",
           "links": [
-            16
+            22
           ]
         }
       ],
       "properties": {
-        "cnr_id": "comfyui-bagel",
-        "ver": "f519eb11210937f0bce9c4df1d96848d32349652",
-        "Node name for S&R": "BagelModelLoader"
+        "Node name for S&R": "BAGELModelLoader"
       },
       "widgets_values": [
-        "DFloat11/BAGEL-7B-MoT-DF11",
-        "BF16",
-        "BF16"
+        "bagel-7b-moT-bf16.safetensors"
       ]
+    },
+    {
+      "id": 22,
+      "type": "VAEDecode",
+      "pos": [
+        970.19921875,
+        55.37109375
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 27
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 28
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            31
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": []
     },
     {
       "id": 12,
       "type": "LoadImage",
       "pos": [
-        50,
-        266
+        -13.79296875,
+        183.8984375
       ],
       "size": [
         315,
@@ -131,7 +96,8 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            17
+            23,
+            24
           ]
         },
         {
@@ -142,131 +108,252 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "LoadImage",
         "cnr_id": "comfy-core",
-        "ver": "0.3.30",
-        "Node name for S&R": "LoadImage"
+        "ver": "0.3.30"
       },
       "widgets_values": [
-        "woman.jpg",
+        "asaki.jpeg",
         "image"
       ]
     },
     {
-      "id": 17,
-      "type": "BagelImageEdit",
+      "id": 20,
+      "type": "VAEEncode",
       "pos": [
-        415,
-        80
+        508.34765625,
+        -120.921875
       ],
       "size": [
-        400,
-        372
+        140,
+        46
       ],
       "flags": {},
-      "order": 2,
+      "order": 3,
       "mode": 0,
       "inputs": [
         {
-          "label": "model",
-          "name": "model",
-          "type": "BAGEL_MODEL",
-          "link": 16
+          "name": "pixels",
+          "type": "IMAGE",
+          "link": 24
         },
         {
-          "label": "image",
-          "name": "image",
-          "type": "IMAGE",
-          "link": 17
+          "name": "vae",
+          "type": "VAE",
+          "link": 26
         }
       ],
       "outputs": [
         {
-          "label": "image",
-          "name": "image",
-          "type": "IMAGE",
+          "name": "LATENT",
+          "type": "LATENT",
           "links": [
-            18
-          ]
-        },
-        {
-          "label": "thinking",
-          "name": "thinking",
-          "type": "STRING",
-          "links": [
-            19
+            25
           ]
         }
       ],
       "properties": {
-        "cnr_id": "comfyui-bagel",
-        "ver": "f519eb11210937f0bce9c4df1d96848d32349652",
-        "Node name for S&R": "BagelImageEdit"
+        "Node name for S&R": "VAEEncode"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 21,
+      "type": "VAELoader",
+      "pos": [
+        522.1251220703125,
+        6.83428955078125
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            26,
+            28
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader"
       },
       "widgets_values": [
-        "She boards a modern subway, quietly reading a folded newspaper, wearing the same clothes.",
-        697672,
-        "randomize",
+        "ae.safetensors"
+      ]
+    },
+    {
+      "id": 19,
+      "type": "BAGELImageEdit",
+      "pos": [
+        395.6875,
+        50.98046875
+      ],
+      "size": [
+        400,
+        272
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "BAGEL_MODEL",
+          "link": 22
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 23
+        },
+        {
+          "name": "vae_latent",
+          "type": "LATENT",
+          "link": 25
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [
+            27
+          ]
+        },
+        {
+          "name": "reasoning",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BAGELImageEdit"
+      },
+      "widgets_values": [
+        "Make the woman's hair turn pink",
         4,
-        2,
+        1.5,
         50,
-        true,
-        0,
-        3,
-        0,
-        "text_channel",
-        0.3,
-        [
-          false,
-          true
-        ]
+        10,
+        296123706632388,
+        "randomize"
+      ]
+    },
+    {
+      "id": 25,
+      "type": "SaveImage",
+      "pos": [
+        1171.29736328125,
+        56.449283599853516
+      ],
+      "size": [
+        270,
+        270
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 31
+        }
+      ],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "bagel"
       ]
     }
   ],
   "links": [
     [
-      16,
-      16,
+      22,
+      18,
       0,
-      17,
+      19,
       0,
       "BAGEL_MODEL"
     ],
     [
-      17,
+      23,
       12,
       0,
-      17,
-      1,
-      "IMAGE"
-    ],
-    [
-      18,
-      17,
-      0,
-      13,
-      0,
-      "IMAGE"
-    ],
-    [
       19,
-      17,
       1,
-      14,
+      "IMAGE"
+    ],
+    [
+      24,
+      12,
       0,
-      "STRING"
+      20,
+      0,
+      "IMAGE"
+    ],
+    [
+      25,
+      20,
+      0,
+      19,
+      2,
+      "LATENT"
+    ],
+    [
+      26,
+      21,
+      0,
+      20,
+      1,
+      "VAE"
+    ],
+    [
+      27,
+      19,
+      0,
+      22,
+      0,
+      "LATENT"
+    ],
+    [
+      28,
+      21,
+      0,
+      22,
+      1,
+      "VAE"
+    ],
+    [
+      31,
+      22,
+      0,
+      25,
+      0,
+      "IMAGE"
     ]
   ],
   "groups": [],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.9646149645000008,
+      "scale": 1.3310000000000004,
       "offset": [
-        50,
-        20
+        -125.97723692847961,
+        113.02894252225178
       ]
     },
-    "frontendVersion": "1.25.10",
+    "frontendVersion": "1.20.7",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,
