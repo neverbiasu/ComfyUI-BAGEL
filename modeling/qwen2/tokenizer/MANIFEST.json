@@ -1,0 +1,26 @@
+{
+  "source_repository": "https://huggingface.co/ByteDance-Seed/BAGEL-7B-MoT",
+  "source_revision": "5019f57d168e5816e8f3f701b17cc816bb7cf24b",
+  "note": "Tokenizer assets copied from the immutable BAGEL source revision above. Hashes and special-token IDs recorded at bundle time. vocab_fingerprint_sha256 is the canonical SHA-256 over the ordered concatenation of the asset files, computed by modeling/qwen2/tokenizer_fingerprint.py (pure stdlib, no torch/transformers).",
+  "files": {
+    "vocab.json": {
+      "sha256": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+    },
+    "merges.txt": {
+      "sha256": "599bab54075088774b1733fde865d5bd747cbcc7a547c5bc12610e874e26f5e3"
+    },
+    "tokenizer.json": {
+      "sha256": "c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539"
+    },
+    "tokenizer_config.json": {
+      "sha256": "5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583"
+    }
+  },
+  "vocab_fingerprint_sha256": "53f2abb68691cb4cdafad0b9a2322b0ff3d392438dcee65dba77614627cacfe8",
+  "special_token_ids": {
+    "<|im_start|>": 151644,
+    "<|im_end|>": 151645,
+    "<|vision_start|>": 151652,
+    "<|vision_end|>": 151653
+  }
+}

@@ -1,0 +1,46 @@
+"""Pure-stdlib discovery of converted BAGEL files (no torch / ComfyUI import).
+
+This module deliberately imports nothing heavy. It is the single source of
+truth for the ``discover_converted_bagel`` behaviour so it can be unit-checked
+with a fake ``folder_paths`` shim (see ``scripts/validate_discovery.py``).
+"""
+
+from typing import Any, Callable, Dict, Optional
+
+
+def discover_converted_bagel(
+    get_filename_list: Callable[[str], "list[str]"],
+    get_full_path: Callable[[str, str], Optional[str]],
+    read_metadata: Callable[[str], Any],
+    folder_name: str = "diffusion_models",
+) -> Dict[str, str]:
+    """Return ``{relative_display_name: full_path}`` for converted BAGEL files.
+
+    Args:
+        get_filename_list: ComfyUI ``folder_paths.get_filename_list`` (recursive,
+            extension-filtered, supports nested model paths; returns relative
+            names such as ``subdir/model.safetensors``).
+        get_full_path: ComfyUI ``folder_paths.get_full_path`` (resolves a
+            relative name to a full path across all base folders).
+        read_metadata: callback that parses/validates a file's converted
+            metadata header and raises on non-converted / malformed files.
+        folder_name: folder category to scan (always ``"diffusion_models"``).
+
+    Only ``diffusion_models`` is scanned; nested model paths are supported via
+    the recursive ``get_filename_list``. Files that are not converted BAGEL
+    safetensors (raw checkpoints, unrelated files) are skipped via the
+    ``read_metadata`` exception, never partially loaded.
+    """
+    found: Dict[str, str] = {}
+    for name in sorted(get_filename_list(folder_name)):
+        if not name.endswith(".safetensors"):
+            continue
+        path = get_full_path(folder_name, name)
+        if path is None:
+            continue
+        try:
+            read_metadata(path)
+        except Exception:
+            continue
+        found[name] = path
+    return found

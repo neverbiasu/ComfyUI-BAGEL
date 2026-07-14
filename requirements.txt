@@ -1,9 +1,15 @@
 decord
+einops
 huggingface_hub
 matplotlib
 opencv_python
 pyarrow
-flash_attn
+safetensors
+scipy
+sentencepiece
+transformers
 accelerate
-bitsandbytes
-# dfloat11[cuda12] # Removed the comment if u wanna use df11
+# Optional / CUDA-only (do not install on CPU or macOS):
+#   flash_attn   -> pip install "comfyui-bagel[cuda]"
+#   bitsandbytes -> pip install "comfyui-bagel[quantization]"
+# dfloat11[cuda12]  # uncomment if you want DFloat11 support
