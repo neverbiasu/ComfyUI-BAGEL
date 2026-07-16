@@ -2,11 +2,21 @@
 
 from __future__ import annotations
 
+import os
+
+from folder_paths import folder_names_and_paths, models_dir as comfy_models_dir
+
 from .modeling.bagel.model_loader import discover_converted_bagel, load_native_bagel
 
 
+folder_names_and_paths.setdefault(
+    "bagel",
+    ([os.path.join(comfy_models_dir, "bagel")], [".safetensors", ".json"]),
+)
+
+
 class BAGELModelLoader:
-    """Load a converted (single-file) BAGEL model from ``models/diffusion_models``.
+    """Load a converted (single-file) BAGEL model from ``models/bagel``.
 
     The native loader accepts ComfyUI-BAGEL metadata embedded in safetensors or
     a hash-bound repack sidecar next to a canonical single-file checkpoint. It
@@ -19,14 +29,14 @@ class BAGELModelLoader:
     @classmethod
     def INPUT_TYPES(cls):
         discovered = discover_converted_bagel()
-        choices = list(discovered.keys()) or ["(no converted BAGEL found)"]
+        choices = list(discovered.keys()) or ["undefined"]
         return {
             "required": {
                 "model": (
                     choices,
                     {
                         "default": choices[0],
-                        "tooltip": "Converted BAGEL .safetensors from convert_bagel_model.py, placed in ComfyUI/models/diffusion_models",
+                        "tooltip": "Converted BAGEL .safetensors from convert_bagel_model.py, placed in ComfyUI/models/bagel",
                     },
                 ),
             }
@@ -41,7 +51,7 @@ class BAGELModelLoader:
         discovered = discover_converted_bagel()
         if model not in discovered:
             raise ValueError(
-                f"Converted BAGEL not found under models/diffusion_models: {model!r}. "
+                f"Converted BAGEL not found under models/bagel: {model!r}. "
                 "Place a converted .safetensors file there (see scripts/convert_bagel_model.py). "
                 "The file must include embedded 'comfyui_bagel' metadata or a matching "
                 ".comfyui-bagel.json sidecar; plain safetensors weights are intentionally "

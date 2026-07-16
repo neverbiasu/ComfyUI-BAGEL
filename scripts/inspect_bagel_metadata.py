@@ -6,7 +6,7 @@ metadata summary, tokenizer vocabulary fingerprint, and required special-token
 IDs. Exits non-zero on a metadata/asset mismatch.
 
 Usage:
-    python scripts/inspect_bagel_metadata.py models/diffusion_models/bagel.safetensors
+    python scripts/inspect_bagel_metadata.py models/bagel/bagel.safetensors
 """
 from __future__ import annotations
 

@@ -2,8 +2,8 @@
 
 This module owns the heavy work the native loader node used to do inline:
 
-* discovery of converted ``.safetensors`` files in ComfyUI's
-  ``diffusion_models`` folder (the only directory the native loader scans);
+* discovery of converted ``.safetensors`` files in ComfyUI's ``models/bagel``
+  folder (with a ``diffusion_models`` migration fallback);
 * embedded or hash-bound-sidecar metadata validation with actionable errors;
 * building the complete coupled BAGEL model on a meta device and assigning
   every converted weight (no Accelerate ``dispatch_model`` / ``load_checkpoint_and_dispatch``);
@@ -130,15 +130,16 @@ def discover_converted_bagel() -> Dict[str, str]:
 
     Uses ComfyUI's official filename cache and path resolution
     (``get_filename_list`` + ``get_full_path``) so nested model paths and the
-    standard folder resolution are honoured. Scans ONLY ``diffusion_models``;
-    files without embedded ``comfyui_bagel`` metadata or a valid-size repack
-    sidecar are skipped. The sidecar SHA-256 is additionally verified at load.
+    standard folder resolution are honoured. Scans the dedicated ``bagel``
+    folder first, then ``diffusion_models`` only as a migration fallback. Files
+    without embedded ``comfyui_bagel`` metadata or a valid-size repack sidecar
+    are skipped. The sidecar SHA-256 is additionally verified at load.
     """
     return _discover_converted_bagel(
         get_filename_list,
         get_full_path,
         _read_metadata,
-        folder_name="diffusion_models",
+        folder_names=("bagel", "diffusion_models"),
     )
 
 

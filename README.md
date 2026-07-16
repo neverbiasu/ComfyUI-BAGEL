@@ -6,7 +6,7 @@ A ComfyUI custom node package for BAGEL-7B-MoT with native ComfyUI model loading
 
 ```mermaid
 flowchart LR
-    A["6chan/bagel_comfy<br/>single-file BAGEL safetensors"] --> B["ComfyUI/models/diffusion_models"]
+    A["6chan/bagel_comfy<br/>single-file BAGEL safetensors"] --> B["ComfyUI/models/bagel"]
     C["FLUX AE<br/>ae.safetensors"] --> D["ComfyUI/models/vae"]
     E["Packaged Qwen tokenizer<br/>inside this custom node"] --> F["BAGEL Model Loader"]
     B --> F
@@ -17,7 +17,7 @@ flowchart LR
 
 | Component | Recommended source | Put it here | Loaded by |
 | --- | --- | --- | --- |
-| BAGEL main model | [`6chan/bagel_comfy`](https://huggingface.co/6chan/bagel_comfy) single-file `.safetensors` | `ComfyUI/models/diffusion_models/` | `BAGEL Model Loader` |
+| BAGEL main model | [`6chan/bagel_comfy`](https://huggingface.co/6chan/bagel_comfy) single-file `.safetensors` | `ComfyUI/models/bagel/` | `BAGEL Model Loader` |
 | FLUX AE / VAE | `ae.safetensors` for FLUX | `ComfyUI/models/vae/` | official `VAELoader`, `VAEEncode`, `VAEDecode` |
 | Qwen tokenizer | bundled in this repository | no manual install | `BAGEL Model Loader` |
 | BAGEL model configs | embedded in the converted `.safetensors` metadata | no manual install | `BAGEL Model Loader` |
@@ -28,7 +28,7 @@ flowchart LR
 > `scripts/convert_bagel_model.py` or re-download the converted file.
 > If the Hugging Face repository also contains config files, treat them as
 > conversion/audit references. The native ComfyUI loader does not require users
-> to copy config files into `models/diffusion_models`.
+> to copy config files into `models/bagel`.
 
 ## Install
 
@@ -36,7 +36,7 @@ flowchart LR
 | --- | --- |
 | 1 | Clone this repository into `ComfyUI/custom_nodes/ComfyUI-BAGEL`. |
 | 2 | Install Python dependencies with `pip install -r requirements.txt`. |
-| 3 | Download a converted BAGEL `.safetensors` from [`6chan/bagel_comfy`](https://huggingface.co/6chan/bagel_comfy) into `ComfyUI/models/diffusion_models/`. |
+| 3 | Download a converted BAGEL `.safetensors` from [`6chan/bagel_comfy`](https://huggingface.co/6chan/bagel_comfy) into `ComfyUI/models/bagel/`. |
 | 4 | Put FLUX `ae.safetensors` into `ComfyUI/models/vae/`. |
 | 5 | Restart ComfyUI and load one of the native workflows below. |
 
@@ -91,8 +91,8 @@ flowchart TB
 
 | Path | Model source | File layout | Nodes | VAE | Status |
 | --- | --- | --- | --- | --- | --- |
-| Native BF16 | `6chan/bagel_comfy` | single `.safetensors` in `diffusion_models` | `BAGEL*` native nodes | official FLUX AE | recommended |
-| Converted local BF16 | original `ByteDance-Seed/BAGEL-7B-MoT` converted by script | single `.safetensors` in `diffusion_models` | `BAGEL*` native nodes | official FLUX AE | supported |
+| Native BF16 | `6chan/bagel_comfy` | single `.safetensors` in `models/bagel` | `BAGEL*` native nodes | official FLUX AE | recommended |
+| Converted local BF16 | original `ByteDance-Seed/BAGEL-7B-MoT` converted by script | single `.safetensors` in `models/bagel` | `BAGEL*` native nodes | official FLUX AE | supported |
 | Legacy standard | original HF shard folder | folder in `models/bagel` | `Bagel* (Deprecated)` | internal legacy VAE | compatibility only |
 | Legacy DFloat11 | DFloat11 HF folder | folder in `models/bagel` | `Bagel* (Deprecated)` | internal legacy VAE | compatibility only |
 

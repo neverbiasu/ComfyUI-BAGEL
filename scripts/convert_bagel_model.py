@@ -19,7 +19,7 @@ files such as the VAE's ``ae.safetensors``).
 Usage:
     python scripts/convert_bagel_model.py \
         --source models/bagel-7b-moT/ema.safetensors \
-        --output models/diffusion_models/bagel-7b-moT-bf16.safetensors \
+        --output models/bagel/bagel-7b-moT-bf16.safetensors \
         --variant BAGEL-7B-MoT --dtype bf16
 """
 from __future__ import annotations
