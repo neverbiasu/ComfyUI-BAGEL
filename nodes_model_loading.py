@@ -18,12 +18,10 @@ folder_names_and_paths.setdefault(
 class BAGELModelLoader:
     """Load a converted (single-file) BAGEL model from ``models/bagel``.
 
-    The native loader accepts ComfyUI-BAGEL metadata embedded in safetensors or
-    a hash-bound repack sidecar next to a canonical single-file checkpoint. It
-    never interprets raw HuggingFace shard layouts,
-    never auto-downloads weights or a tokenizer, and returns a ``BAGEL_MODEL``
-    patcher whose attached state carries the packaged tokenizer and an immutable
-    checkpoint identity.
+    The native loader lists standard ComfyUI model files from ``models/bagel``.
+    Optional ComfyUI-BAGEL metadata/sidecars are used when present; otherwise it
+    falls back to the built-in BAGEL-7B-MoT config. It never auto-downloads
+    weights or a tokenizer.
     """
 
     @classmethod
@@ -36,7 +34,7 @@ class BAGELModelLoader:
                     choices,
                     {
                         "default": choices[0],
-                        "tooltip": "Converted BAGEL .safetensors from convert_bagel_model.py, placed in ComfyUI/models/bagel",
+                        "tooltip": "BAGEL .safetensors placed in ComfyUI/models/bagel",
                     },
                 ),
             }
@@ -51,11 +49,8 @@ class BAGELModelLoader:
         discovered = discover_converted_bagel()
         if model not in discovered:
             raise ValueError(
-                f"Converted BAGEL not found under models/bagel: {model!r}. "
-                "Place a converted .safetensors file there (see scripts/convert_bagel_model.py). "
-                "The file must include embedded 'comfyui_bagel' metadata or a matching "
-                ".comfyui-bagel.json sidecar; plain safetensors weights are intentionally "
-                "not shown in the dropdown."
+                f"BAGEL checkpoint not found under models/bagel: {model!r}. "
+                "Place a .safetensors file there and refresh ComfyUI."
             )
         path = discovered[model]
         return (load_native_bagel(path),)

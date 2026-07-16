@@ -20,10 +20,10 @@ flowchart LR
 | BAGEL main model | [`6chan/bagel_comfy`](https://huggingface.co/6chan/bagel_comfy) single-file `.safetensors` | `ComfyUI/models/bagel/` | `BAGEL Model Loader` |
 | FLUX AE / VAE | `ae.safetensors` for FLUX | `ComfyUI/models/vae/` | official `VAELoader`, `VAEEncode`, `VAEDecode` |
 | Qwen tokenizer | bundled in this repository | no manual install | `BAGEL Model Loader` |
-| BAGEL model configs | embedded in the converted `.safetensors` metadata | no manual install | `BAGEL Model Loader` |
+| BAGEL model configs | built into the node; optional metadata can override them | no manual install | `BAGEL Model Loader` |
 | Old HF shard layout | `ByteDance-Seed/BAGEL-7B-MoT`, `DFloat11/BAGEL-7B-MoT-DF11` | `ComfyUI/models/bagel/` | deprecated legacy nodes |
 
-> Recommended: download the converted single-file model from `6chan/bagel_comfy`.
+> Recommended: download the single-file model from `6chan/bagel_comfy`.
 > If you already have the original BAGEL checkpoint, either convert it with
 > `scripts/convert_bagel_model.py` or re-download the converted file.
 > If the Hugging Face repository also contains config files, treat them as
@@ -36,7 +36,7 @@ flowchart LR
 | --- | --- |
 | 1 | Clone this repository into `ComfyUI/custom_nodes/ComfyUI-BAGEL`. |
 | 2 | Install Python dependencies with `pip install -r requirements.txt`. |
-| 3 | Download a converted BAGEL `.safetensors` from [`6chan/bagel_comfy`](https://huggingface.co/6chan/bagel_comfy) into `ComfyUI/models/bagel/`. |
+| 3 | Download a BAGEL `.safetensors` from [`6chan/bagel_comfy`](https://huggingface.co/6chan/bagel_comfy) into `ComfyUI/models/bagel/`. |
 | 4 | Put FLUX `ae.safetensors` into `ComfyUI/models/vae/`. |
 | 5 | Restart ComfyUI and load one of the native workflows below. |
 
@@ -45,7 +45,6 @@ flowchart LR
 | Current state | Recommended action |
 | --- | --- |
 | You already downloaded `ByteDance-Seed/BAGEL-7B-MoT` | Convert it with `scripts/convert_bagel_model.py`, or re-download the converted single-file model. |
-| You already have a single `.safetensors` without `comfyui_bagel` metadata | Create a small sidecar with `scripts/create_bagel_sidecar.py`; no need to rewrite the large checkpoint. |
 | You already downloaded `DFloat11/BAGEL-7B-MoT-DF11` | Keep using deprecated workflows for now, or convert/re-download when a converted quantized release is available. |
 | You have old all-in-one BAGEL workflows | Use the `_deprecated` workflow files and deprecated nodes, then migrate to native workflows. |
 
@@ -94,7 +93,6 @@ flowchart TB
 | --- | --- | --- | --- | --- | --- |
 | Native BF16 | `6chan/bagel_comfy` | single `.safetensors` in `models/bagel` | `BAGEL*` native nodes | official FLUX AE | recommended |
 | Converted local BF16 | original `ByteDance-Seed/BAGEL-7B-MoT` converted by script | single `.safetensors` in `models/bagel` | `BAGEL*` native nodes | official FLUX AE | supported |
-| Sidecar-repaired BF16 | existing single `.safetensors` + `.comfyui-bagel.json` | both files side by side in `models/bagel` | `BAGEL*` native nodes | official FLUX AE | supported |
 | Legacy standard | original HF shard folder | folder in `models/bagel` | `Bagel* (Deprecated)` | internal legacy VAE | compatibility only |
 | Legacy DFloat11 | DFloat11 HF folder | folder in `models/bagel` | `Bagel* (Deprecated)` | internal legacy VAE | compatibility only |
 
