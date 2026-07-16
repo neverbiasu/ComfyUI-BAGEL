@@ -42,7 +42,10 @@ class BAGELModelLoader:
         if model not in discovered:
             raise ValueError(
                 f"Converted BAGEL not found under models/diffusion_models: {model!r}. "
-                "Place a converted .safetensors file there (see scripts/convert_bagel_model.py)."
+                "Place a converted .safetensors file there (see scripts/convert_bagel_model.py). "
+                "The file must include embedded 'comfyui_bagel' metadata or a matching "
+                ".comfyui-bagel.json sidecar; plain safetensors weights are intentionally "
+                "not shown in the dropdown."
             )
         path = discovered[model]
         return (load_native_bagel(path),)

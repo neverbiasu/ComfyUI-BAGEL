@@ -40,7 +40,17 @@ def discover_converted_bagel(
             continue
         try:
             read_metadata(path)
-        except Exception:
+        except Exception as exc:
+            print(
+                "[BAGEL] skipping diffusion_models entry "
+                f"{name!r}: not a loadable converted BAGEL checkpoint ({exc})"
+            )
             continue
         found[name] = path
+    if not found:
+        print(
+            "[BAGEL] no converted BAGEL checkpoints found in diffusion_models. "
+            "Expected a .safetensors file with embedded 'comfyui_bagel' metadata "
+            "or a matching .comfyui-bagel.json sidecar."
+        )
     return found
