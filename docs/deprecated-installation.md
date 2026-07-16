@@ -44,6 +44,7 @@ python -c "from huggingface_hub import snapshot_download; snapshot_download(repo
 | --- | --- |
 | Existing original BAGEL BF16 shards | Convert them with `scripts/convert_bagel_model.py`. |
 | No local BAGEL model yet | Download the converted single-file model from `6chan/bagel_comfy`. |
+| Existing single-file safetensors without metadata | Generate `<checkpoint>.comfyui-bagel.json` with `scripts/create_bagel_sidecar.py`. |
 | Existing old workflows | Use the `_deprecated` workflows as a bridge, then migrate to the native workflows. |
 
 ## Deprecated dependencies

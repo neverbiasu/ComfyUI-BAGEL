@@ -45,6 +45,7 @@ flowchart LR
 | Current state | Recommended action |
 | --- | --- |
 | You already downloaded `ByteDance-Seed/BAGEL-7B-MoT` | Convert it with `scripts/convert_bagel_model.py`, or re-download the converted single-file model. |
+| You already have a single `.safetensors` without `comfyui_bagel` metadata | Create a small sidecar with `scripts/create_bagel_sidecar.py`; no need to rewrite the large checkpoint. |
 | You already downloaded `DFloat11/BAGEL-7B-MoT-DF11` | Keep using deprecated workflows for now, or convert/re-download when a converted quantized release is available. |
 | You have old all-in-one BAGEL workflows | Use the `_deprecated` workflow files and deprecated nodes, then migrate to native workflows. |
 
@@ -93,6 +94,7 @@ flowchart TB
 | --- | --- | --- | --- | --- | --- |
 | Native BF16 | `6chan/bagel_comfy` | single `.safetensors` in `models/bagel` | `BAGEL*` native nodes | official FLUX AE | recommended |
 | Converted local BF16 | original `ByteDance-Seed/BAGEL-7B-MoT` converted by script | single `.safetensors` in `models/bagel` | `BAGEL*` native nodes | official FLUX AE | supported |
+| Sidecar-repaired BF16 | existing single `.safetensors` + `.comfyui-bagel.json` | both files side by side in `models/bagel` | `BAGEL*` native nodes | official FLUX AE | supported |
 | Legacy standard | original HF shard folder | folder in `models/bagel` | `Bagel* (Deprecated)` | internal legacy VAE | compatibility only |
 | Legacy DFloat11 | DFloat11 HF folder | folder in `models/bagel` | `Bagel* (Deprecated)` | internal legacy VAE | compatibility only |
 
