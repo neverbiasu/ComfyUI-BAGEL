@@ -9,10 +9,30 @@ from folder_paths import folder_names_and_paths, models_dir as comfy_models_dir
 from .modeling.bagel.model_loader import discover_converted_bagel, load_native_bagel
 
 
-folder_names_and_paths.setdefault(
-    "bagel",
-    ([os.path.join(comfy_models_dir, "bagel")], [".safetensors", ".json"]),
-)
+def _register_bagel_model_folder() -> None:
+    """Register BAGEL model paths without clobbering extra_model_paths.yaml.
+
+    ComfyUI users often add model folders through ``extra_model_paths.yaml``.
+    Custom nodes must preserve those paths and only append their default folder
+    / extensions. This mirrors the community pattern used by model-heavy nodes:
+    extend ``folder_names_and_paths`` rather than replacing it.
+    """
+
+    default_path = os.path.join(comfy_models_dir, "bagel")
+    paths, extensions = folder_names_and_paths.get("bagel", ([], []))
+    merged_paths = list(paths)
+    if default_path not in merged_paths:
+        merged_paths.append(default_path)
+
+    merged_extensions = list(extensions)
+    for extension in (".safetensors", ".json"):
+        if extension not in merged_extensions:
+            merged_extensions.append(extension)
+
+    folder_names_and_paths["bagel"] = (merged_paths, merged_extensions)
+
+
+_register_bagel_model_folder()
 
 
 class BAGELModelLoader:

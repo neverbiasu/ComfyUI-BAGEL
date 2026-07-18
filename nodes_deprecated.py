@@ -36,11 +36,24 @@ from modeling.bagel import (
 )
 from modeling.qwen2 import Qwen2Tokenizer
 
-# Register the BAGEL model folder
-folder_names_and_paths["bagel"] = (
-    [os.path.join(comfy_models_dir, "bagel")],
-    [".json", ".safetensors"],
-)
+def _register_bagel_model_folder() -> None:
+    """Register BAGEL model paths without clobbering extra_model_paths.yaml."""
+
+    default_path = os.path.join(comfy_models_dir, "bagel")
+    paths, extensions = folder_names_and_paths.get("bagel", ([], []))
+    merged_paths = list(paths)
+    if default_path not in merged_paths:
+        merged_paths.append(default_path)
+
+    merged_extensions = list(extensions)
+    for extension in (".json", ".safetensors"):
+        if extension not in merged_extensions:
+            merged_extensions.append(extension)
+
+    folder_names_and_paths["bagel"] = (merged_paths, merged_extensions)
+
+
+_register_bagel_model_folder()
 
 
 def _require_dfloat11():
