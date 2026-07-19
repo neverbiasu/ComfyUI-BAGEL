@@ -59,6 +59,15 @@ TOKENIZER_DIR = os.path.join(REPO_ROOT, "modeling", "qwen2", "tokenizer")
 BAGEL_METADATA_KEY = FORMAT_NAME
 SIDECAR_SUFFIX = ".comfyui-bagel.json"
 
+# The packaged Qwen2 tokenizer is bundled with BAGEL's required special tokens.
+# Some converted checkpoints in the wild do not carry config metadata, and the
+# local Qwen2Config default does not define these PretrainedConfig attributes
+# unless they are passed explicitly. BAGEL's Qwen2Model reads them during
+# construction, so keep the fallback aligned with the packaged tokenizer.
+DEFAULT_QWEN_PAD_TOKEN_ID = 151643  # <|endoftext|>
+DEFAULT_QWEN_BOS_TOKEN_ID = 151644  # <|im_start|>
+DEFAULT_QWEN_EOS_TOKEN_ID = 151645  # <|im_end|>
+
 
 def _sha256_file(path: str) -> str:
     h = hashlib.sha256()
@@ -149,7 +158,17 @@ def _build_config(metadata: Optional[ConvertedBagelMetadata]):
     if "llm_config.json" in model_configs:
         llm_config = Qwen2Config.from_dict(model_configs["llm_config.json"])
     else:
-        llm_config = Qwen2Config()
+        llm_config = Qwen2Config(
+            pad_token_id=DEFAULT_QWEN_PAD_TOKEN_ID,
+            bos_token_id=DEFAULT_QWEN_BOS_TOKEN_ID,
+            eos_token_id=DEFAULT_QWEN_EOS_TOKEN_ID,
+        )
+    if getattr(llm_config, "pad_token_id", None) is None:
+        llm_config.pad_token_id = DEFAULT_QWEN_PAD_TOKEN_ID
+    if getattr(llm_config, "bos_token_id", None) is None:
+        llm_config.bos_token_id = DEFAULT_QWEN_BOS_TOKEN_ID
+    if getattr(llm_config, "eos_token_id", None) is None:
+        llm_config.eos_token_id = DEFAULT_QWEN_EOS_TOKEN_ID
     llm_config.qk_norm = True
     llm_config.tie_word_embeddings = False
     llm_config.layer_module = "Qwen2MoTDecoderLayer"
