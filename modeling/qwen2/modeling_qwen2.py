@@ -41,6 +41,32 @@ _CHECKPOINT_FOR_DOC = "Qwen/Qwen2-7B"
 _CONFIG_FOR_DOC = "Qwen2Config"
 
 
+def _compute_default_rope_parameters(config, device=None, **_kwargs):
+    """Compute standard RoPE without relying on Transformers' private registry.
+
+    ``ROPE_INIT_FUNCTIONS`` is an internal Transformers detail whose keys have
+    changed across releases. BAGEL uses ordinary, unscaled Qwen2 RoPE by
+    default, so keeping that small calculation local makes the vendored model
+    work with both ComfyUI's Transformers version and the version pinned by
+    this project.
+    """
+    base = config.rope_theta
+    head_dim = getattr(config, "head_dim", None) or (
+        config.hidden_size // config.num_attention_heads
+    )
+    partial_rotary_factor = getattr(config, "partial_rotary_factor", 1.0)
+    dim = int(head_dim * partial_rotary_factor)
+    inv_freq = 1.0 / (
+        base
+        ** (
+            torch.arange(0, dim, 2, dtype=torch.int64)
+            .to(device=device, dtype=torch.float)
+            / dim
+        )
+    )
+    return inv_freq, 1.0
+
+
 # Copied from transformers.models.llama.modeling_llama.LlamaRMSNorm with Llama->Qwen2
 class Qwen2RMSNorm(nn.Module):
     def __init__(self, hidden_size, eps=1e-6):
@@ -103,7 +129,16 @@ class Qwen2RotaryEmbedding(nn.Module):
             self.original_max_seq_len = config.max_position_embeddings
 
         self.config = config
-        self.rope_init_fn = ROPE_INIT_FUNCTIONS[self.rope_type]
+        if self.rope_type == "default":
+            self.rope_init_fn = _compute_default_rope_parameters
+        else:
+            try:
+                self.rope_init_fn = ROPE_INIT_FUNCTIONS[self.rope_type]
+            except KeyError as exc:
+                raise ValueError(
+                    f"Unsupported Qwen2 RoPE type {self.rope_type!r}; "
+                    f"available Transformers RoPE types: {sorted(ROPE_INIT_FUNCTIONS)}"
+                ) from exc
 
         inv_freq, self.attention_scaling = self.rope_init_fn(self.config, device, **self.rope_kwargs)
         self.register_buffer("inv_freq", inv_freq, persistent=False)
