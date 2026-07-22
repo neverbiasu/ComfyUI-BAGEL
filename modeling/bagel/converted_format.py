@@ -61,6 +61,13 @@ class ConvertedBagelMetadata:
     tensor_summary: Dict[str, object] = field(default_factory=dict)
     # Embedded model configs so the loader never downloads them at runtime.
     model_configs: Dict[str, object] = field(default_factory=dict)
+    # Variant-specific Bagel constructor facts. These are descriptive until a
+    # matching runtime adapter explicitly consumes them.
+    model_options: Dict[str, object] = field(default_factory=dict)
+    # Tokens appended by a variant on top of the packaged BAGEL tokenizer.
+    # Keeping them in metadata lets a future adapter reproduce the exact
+    # tokenizer contract without guessing from the filename.
+    additional_special_tokens: List[str] = field(default_factory=list)
     converter_version: str = CONVERTER_VERSION
 
     def to_dict(self) -> Dict:
@@ -80,6 +87,8 @@ class ConvertedBagelMetadata:
             "capabilities": list(self.capabilities),
             "tensor_summary": dict(self.tensor_summary),
             "model_configs": dict(self.model_configs),
+            "model_options": dict(self.model_options),
+            "additional_special_tokens": list(self.additional_special_tokens),
             "converter_version": self.converter_version,
         }
         return d
@@ -102,6 +111,8 @@ class ConvertedBagelMetadata:
             capabilities=list(d.get("capabilities", [])),
             tensor_summary=dict(d.get("tensor_summary", {})),
             model_configs=dict(d.get("model_configs", {})),
+            model_options=dict(d.get("model_options", {})),
+            additional_special_tokens=list(d.get("additional_special_tokens", [])),
             converter_version=d.get("converter_version", CONVERTER_VERSION),
         )
 

@@ -307,6 +307,18 @@ def load_native_bagel(
             f"{os.path.basename(path)} has unsupported format version "
             f"{metadata.format_version}; only version 1 is accepted."
         )
+    if metadata and (
+        metadata.model_options.get("visual_und", True) is False
+        or metadata.additional_special_tokens
+    ):
+        raise NotImplementedError(
+            f"{metadata.variant or os.path.basename(path)} is a valid converted "
+            "BAGEL-family checkpoint, but its runtime contract requires a "
+            "variant adapter (model_options/additional_special_tokens) that is "
+            "not implemented by the current native nodes. The checkpoint is "
+            "discoverable for forward compatibility; do not treat metadata "
+            "conversion as runtime support."
+        )
 
     load_device = load_device or ("cuda" if torch.cuda.is_available() else "cpu")
     offload_device = offload_device or "cpu"
