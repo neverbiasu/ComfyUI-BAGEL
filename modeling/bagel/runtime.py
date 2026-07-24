@@ -34,6 +34,49 @@ def _model_device(model) -> torch.device:
     return next(model.parameters()).device
 
 
+def validate_bagel_image_shape(model, image_shape: Tuple[int, int]) -> None:
+    """Reject image sizes that cannot be represented by BAGEL's position grid.
+
+    ``latent_downsample`` includes the VAE downsample and BAGEL's latent patch
+    size (normally 16 pixels).  The learned 2-D position table has
+    ``max_latent_size`` entries per side, so allowing a larger packed grid
+    would only fail later as an opaque CUDA index assertion.
+    """
+    height, width = (int(image_shape[0]), int(image_shape[1]))
+    downsample = int(getattr(model, "latent_downsample", 0))
+    max_side = int(getattr(model, "max_latent_size", 0))
+    patch_size = int(getattr(model, "latent_patch_size", 1))
+    if downsample <= 0 or max_side <= 0:
+        raise ValueError("BAGEL model is missing valid latent geometry metadata")
+    if height <= 0 or width <= 0:
+        raise ValueError(f"BAGEL image size must be positive, got {(height, width)}")
+
+    grid_h, grid_w = height // downsample, width // downsample
+    if grid_h < 1 or grid_w < 1:
+        raise ValueError(
+            f"BAGEL image {(height, width)} is smaller than one latent patch "
+            f"({downsample}px)"
+        )
+    if grid_h > max_side or grid_w > max_side:
+        max_pixels = max_side * downsample
+        raise ValueError(
+            f"BAGEL image {(height, width)} produces a {grid_h}x{grid_w} "
+            f"latent grid, but this model supports at most {max_side}x{max_side}. "
+            f"Use dimensions no larger than {max_pixels}px per side."
+        )
+    # The packed representation drops an incomplete edge.  Reject it instead
+    # of silently conditioning on a cropped latent and generating another size.
+    vae_downsample = downsample // patch_size
+    if vae_downsample > 0:
+        h_lat, w_lat = height // vae_downsample, width // vae_downsample
+        if h_lat % patch_size or w_lat % patch_size:
+            raise ValueError(
+                f"BAGEL image {(height, width)} yields VAE latent grid "
+                f"{h_lat}x{w_lat}; both sides must be divisible by latent "
+                f"patch size {patch_size}. Resize/crop to a compatible size."
+            )
+
+
 def _move_tensors_to_device(value, device: torch.device):
     if torch.is_tensor(value):
         return value.to(device)

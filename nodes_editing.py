@@ -21,6 +21,7 @@ from .modeling.bagel.runtime import (
     update_context_text,
     update_vae_latent_from_latent,
     update_vit_image,
+    validate_bagel_image_shape,
 )
 from .nodes_common import apply_seed, build_handle, comfy_image_to_pil
 
@@ -58,6 +59,7 @@ class BAGELImageEdit:
         # Output pixel size follows the source VAE latent.
         _, _, h_lat, w_lat = vae_tensor.shape
         H, W = h_lat * 8, w_lat * 8
+        validate_bagel_image_shape(m, (H, W))
 
         pil = comfy_image_to_pil(image)
 

@@ -9,6 +9,7 @@ from .modeling.bagel.runtime import (
     generate_latent,
     init_gen_context,
     update_context_text,
+    validate_bagel_image_shape,
 )
 from .nodes_common import apply_seed, build_handle
 
@@ -47,6 +48,7 @@ class BAGELTextToImage:
         handle = build_handle(model)
         m = handle["model"]
         device = next(m.parameters()).device
+        validate_bagel_image_shape(m, (height, width))
 
         apply_seed(seed)
 
