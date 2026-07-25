@@ -1,18 +1,18 @@
 {
-  "id": "3fa96181-e113-4145-ab50-238e8d4aa26b",
+  "id": "8d721519-9ead-49c2-9f13-40922da8a782",
   "revision": 0,
-  "last_node_id": 25,
-  "last_link_id": 31,
+  "last_node_id": 16,
+  "last_link_id": 13,
   "nodes": [
     {
-      "id": 18,
-      "type": "BAGELModelLoader",
+      "id": 2,
+      "type": "VAELoader",
       "pos": [
-        14.01953125,
-        53.0703125
+        567.4857420622562,
+        -117.73019916718768
       ],
       "size": [
-        288.9888610839844,
+        270,
         58
       ],
       "flags": {},
@@ -21,166 +21,11 @@
       "inputs": [],
       "outputs": [
         {
-          "name": "model",
-          "type": "BAGEL_MODEL",
-          "links": [
-            22
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "BAGELModelLoader"
-      },
-      "widgets_values": [
-        "bagel-7b-moT-bf16.safetensors"
-      ]
-    },
-    {
-      "id": 22,
-      "type": "VAEDecode",
-      "pos": [
-        970.19921875,
-        55.37109375
-      ],
-      "size": [
-        140,
-        46
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "samples",
-          "type": "LATENT",
-          "link": 27
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 28
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            31
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "VAEDecode"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 12,
-      "type": "LoadImage",
-      "pos": [
-        -13.79296875,
-        183.8984375
-      ],
-      "size": [
-        315,
-        314
-      ],
-      "flags": {},
-      "order": 1,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "label": "IMAGE",
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            23,
-            24
-          ]
-        },
-        {
-          "label": "MASK",
-          "name": "MASK",
-          "type": "MASK",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LoadImage",
-        "cnr_id": "comfy-core",
-        "ver": "0.3.30"
-      },
-      "widgets_values": [
-        "asaki.jpeg",
-        "image"
-      ]
-    },
-    {
-      "id": 20,
-      "type": "VAEEncode",
-      "pos": [
-        508.34765625,
-        -120.921875
-      ],
-      "size": [
-        140,
-        46
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "pixels",
-          "type": "IMAGE",
-          "link": 24
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 26
-        }
-      ],
-      "outputs": [
-        {
-          "name": "LATENT",
-          "type": "LATENT",
-          "links": [
-            25
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "VAEEncode"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 21,
-      "type": "VAELoader",
-      "pos": [
-        522.1251220703125,
-        6.83428955078125
-      ],
-      "size": [
-        270,
-        58
-      ],
-      "flags": {
-        "collapsed": true
-      },
-      "order": 2,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
           "name": "VAE",
           "type": "VAE",
           "links": [
-            26,
-            28
+            3,
+            8
           ]
         }
       ],
@@ -192,11 +37,271 @@
       ]
     },
     {
-      "id": 19,
+      "id": 7,
+      "type": "BAGELModelLoader",
+      "pos": [
+        238.84923460409914,
+        39.055157778274065
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "BAGEL_MODEL",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BAGELModelLoader"
+      },
+      "widgets_values": [
+        "bagel-7b-mot.safetensors"
+      ]
+    },
+    {
+      "id": 9,
+      "type": "VAEEncode",
+      "pos": [
+        538.9336527949495,
+        286.05668826660605
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pixels",
+          "type": "IMAGE",
+          "link": 4
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEEncode"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 11,
+      "type": "VAEDecode",
+      "pos": [
+        1216.998158511715,
+        38.223731490131655
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 7
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 13,
+      "type": "SaveImage",
+      "pos": [
+        1432.17269654128,
+        36.590165004620765
+      ],
+      "size": [
+        270,
+        270
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "bagel"
+      ]
+    },
+    {
+      "id": 15,
+      "type": "PreviewAny",
+      "pos": [
+        1196.1783750860889,
+        328.4806183353731
+      ],
+      "size": [
+        210,
+        188.23492783525109
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": 10,
+      "type": "LoadImage",
+      "pos": [
+        237.8762537869404,
+        173.8986366168769
+      ],
+      "size": [
+        282.798828125,
+        314
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            4,
+            6
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "gpt-image-2_00003_.png",
+        "image"
+      ]
+    },
+    {
+      "id": 16,
+      "type": "ImageScale",
+      "pos": [
+        270,
+        286
+      ],
+      "size": [
+        315,
+        130
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 13
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            4,
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageScale"
+      },
+      "widgets_values": [
+        "lanczos",
+        768,
+        1024,
+        "disabled"
+      ]
+    },
+    {
+      "id": 3,
       "type": "BAGELImageEdit",
       "pos": [
-        395.6875,
-        50.98046875
+        758.4456750782914,
+        36.600739383973405
       ],
       "size": [
         400,
@@ -209,17 +314,17 @@
         {
           "name": "model",
           "type": "BAGEL_MODEL",
-          "link": 22
+          "link": 2
         },
         {
           "name": "image",
           "type": "IMAGE",
-          "link": 23
+          "link": 6
         },
         {
           "name": "vae_latent",
           "type": "LATENT",
-          "link": 25
+          "link": 5
         }
       ],
       "outputs": [
@@ -227,137 +332,124 @@
           "name": "latent",
           "type": "LATENT",
           "links": [
-            27
+            7
           ]
         },
         {
           "name": "reasoning",
           "type": "STRING",
-          "links": null
+          "links": [
+            12
+          ]
         }
       ],
       "properties": {
         "Node name for S&R": "BAGELImageEdit"
       },
       "widgets_values": [
-        "Make the woman's hair turn pink",
+        "Make the girl's hair to pink",
         4,
         1.5,
         50,
-        10,
-        296123706632388,
+        3,
+        494048760037423,
         "randomize"
-      ]
-    },
-    {
-      "id": 25,
-      "type": "SaveImage",
-      "pos": [
-        1171.29736328125,
-        56.449283599853516
-      ],
-      "size": [
-        270,
-        270
-      ],
-      "flags": {},
-      "order": 6,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 31
-        }
-      ],
-      "outputs": [],
-      "properties": {},
-      "widgets_values": [
-        "bagel"
       ]
     }
   ],
   "links": [
     [
-      22,
-      18,
+      2,
+      7,
       0,
-      19,
+      3,
       0,
       "BAGEL_MODEL"
     ],
     [
-      23,
-      12,
+      3,
+      2,
       0,
-      19,
+      9,
       1,
+      "VAE"
+    ],
+    [
+      4,
+      16,
+      0,
+      9,
+      0,
       "IMAGE"
     ],
     [
-      24,
-      12,
+      5,
+      9,
       0,
-      20,
-      0,
-      "IMAGE"
-    ],
-    [
-      25,
-      20,
-      0,
-      19,
+      3,
       2,
       "LATENT"
     ],
     [
-      26,
-      21,
+      6,
+      16,
       0,
-      20,
+      3,
       1,
-      "VAE"
+      "IMAGE"
     ],
     [
-      27,
-      19,
+      13,
+      10,
       0,
-      22,
+      16,
+      0,
+      "IMAGE"
+    ],
+    [
+      7,
+      3,
+      0,
+      11,
       0,
       "LATENT"
     ],
     [
-      28,
-      21,
+      8,
+      2,
       0,
-      22,
+      11,
       1,
       "VAE"
     ],
     [
-      31,
-      22,
+      10,
+      11,
       0,
-      25,
+      13,
       0,
       "IMAGE"
+    ],
+    [
+      12,
+      3,
+      1,
+      15,
+      0,
+      "STRING"
     ]
   ],
   "groups": [],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 1.3310000000000004,
+      "scale": 0.9246080716936946,
       "offset": [
-        -125.97723692847961,
-        113.02894252225178
+        -138.37477582466786,
+        216.98241611059646
       ]
     },
-    "frontendVersion": "1.20.7",
-    "VHS_latentpreview": false,
-    "VHS_latentpreviewrate": 0,
-    "VHS_MetadataImage": true,
-    "VHS_KeepIntermediate": true
+    "frontendVersion": "1.45.20"
   },
   "version": 0.4
 }

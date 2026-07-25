@@ -62,8 +62,9 @@ flowchart TB
     end
 
     subgraph EDIT["Image editing"]
-        I["LoadImage"] --> E["BAGEL Image Edit"]
-        I --> VE["VAEEncode"]
+        I["LoadImage"] --> R["ImageScale (16-aligned)"]
+        R --> E["BAGEL Image Edit"]
+        R --> VE["VAEEncode"]
         V2["VAELoader ae.safetensors"] --> VE
         VE --> E
         M2["BAGEL Model Loader"] --> E
@@ -81,7 +82,7 @@ flowchart TB
 | Workflow | File | Extra nodes | Notes |
 | --- | --- | --- | --- |
 | Text-to-image | `example_workflows/bagel_text_to_image.json` | none | Native BAGEL latent generation, official `VAEDecode`. |
-| Image editing | `example_workflows/bagel_image_editing.json` | none | Official `VAEEncode` feeds source-image latent conditioning; official `VAEDecode` decodes output. |
+| Image editing | `example_workflows/bagel_image_editing.json` | official `ImageScale`, `VAEEncode`, `VAEDecode` | Resize the source image before both `VAEEncode` and `BAGEL Image Edit`; use 16-aligned dimensions, with a 512–1024px range matching the original BAGEL preprocessing. |
 | Image understanding | `example_workflows/bagel_image_understanding.json` | `ShowText|pysssss` from `comfyui-custom-scripts`, or replace with official `Preview as Text` on newer ComfyUI | VIT/text path only; no VAE nodes required. |
 | Deprecated text-to-image | `example_workflows/bagel_text_to_image_deprecated.json` | `comfyui-custom-scripts` | Old all-in-one loader. |
 | Deprecated image editing | `example_workflows/bagel_image_editing_deprecated.json` | `comfyui-custom-scripts` | Old all-in-one loader. |
