@@ -16,6 +16,10 @@ import numpy as np
 import torch
 from PIL import Image
 
+
+GEN_THINK_SYSTEM_PROMPT = """You should first think about the planning process in the mind and then generate the image.
+The planning process is enclosed within <think> </think> tags, i.e. <think> planning process here </think> image here"""
+
 def build_handle(patcher) -> dict:
     """Extract the runtime handle from a ``BAGEL_MODEL`` patcher.
 
@@ -33,8 +37,24 @@ def build_handle(patcher) -> dict:
         "model": patcher.model,
         "tokenizer": state["tokenizer"],
         "new_token_ids": state["new_token_ids"],
+        "image_transform": state["image_transform"],
         "vit_transform": state["vit_transform"],
+        "variant_descriptor": state["variant_descriptor"],
     }
+
+
+def require_bagel_capability(patcher, capability: str) -> None:
+    """Reject a node task before GPU loading when a variant does not support it."""
+    state = getattr(patcher, "bagel_state", None) or {}
+    descriptor = state.get("variant_descriptor", {})
+    capabilities = descriptor.get("capabilities", [])
+    if capability not in capabilities:
+        name = descriptor.get("name") or descriptor.get("variant") or "unknown BAGEL model"
+        tier = descriptor.get("tier", "unsupported")
+        raise NotImplementedError(
+            f"{name} does not support BAGEL {capability} in this runtime "
+            f"(capability tier: {tier})."
+        )
 
 
 def apply_seed(seed: int) -> None:
@@ -52,3 +72,14 @@ def comfy_image_to_pil(image: torch.Tensor) -> Image.Image:
     arr = image[0].detach().cpu().float().numpy()
     arr = np.clip(arr * 255.0, 0, 255).astype(np.uint8)
     return Image.fromarray(arr)
+
+
+def require_single_image_batch(image: torch.Tensor, *, name: str = "image") -> None:
+    """Native BAGEL currently accepts one image/latent per execution only."""
+    if not torch.is_tensor(image) or image.ndim != 4:
+        raise ValueError(f"BAGEL {name} must be a rank-4 ComfyUI tensor")
+    if image.shape[0] != 1:
+        raise ValueError(
+            f"BAGEL {name} batch size must be 1; received {image.shape[0]}. "
+            "Use one BAGEL node execution per image."
+        )

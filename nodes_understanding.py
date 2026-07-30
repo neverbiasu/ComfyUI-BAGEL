@@ -11,7 +11,12 @@ from .modeling.bagel.runtime import (
     update_context_text,
     update_vit_image,
 )
-from .nodes_common import build_handle, comfy_image_to_pil
+from .nodes_common import (
+    build_handle,
+    comfy_image_to_pil,
+    require_bagel_capability,
+    require_single_image_batch,
+)
 
 
 class BAGELImageUnderstanding:
@@ -29,8 +34,8 @@ class BAGELImageUnderstanding:
                 "image": ("IMAGE",),
                 "prompt": ("STRING", {"multiline": True, "default": "Describe this image."}),
                 "max_length": ("INT", {"default": 500, "min": 1, "max": 2000, "step": 1}),
-                "temperature": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 2.0, "step": 0.05}),
-                "do_sample": ("BOOLEAN", {"default": True}),
+                "temperature": ("FLOAT", {"default": 0.3, "min": 0.0, "max": 2.0, "step": 0.05}),
+                "do_sample": ("BOOLEAN", {"default": False}),
             }
         }
 
@@ -41,12 +46,16 @@ class BAGELImageUnderstanding:
     CATEGORY = "BAGEL/Understanding"
 
     def understand(self, model, image, prompt, max_length, temperature, do_sample):
+        require_bagel_capability(model, "image_understanding")
+        require_single_image_batch(image)
         model_management.load_models_gpu([model])
         handle = build_handle(model)
         m = handle["model"]
         device = next(m.parameters()).device
 
-        pil = comfy_image_to_pil(image)
+        # InterleaveInferencer applies the shared 1024/512/16 resize before
+        # passing the image through the NaViT-specific transform.
+        pil = handle["image_transform"].resize_transform(comfy_image_to_pil(image))
 
         with torch.autocast(device_type=device.type, dtype=torch.bfloat16):
             # Legacy image-then-text ordering (InterleaveInferencer.__call__):

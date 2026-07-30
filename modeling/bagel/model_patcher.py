@@ -21,6 +21,7 @@ checkpoint is always available for cache invalidation / future multi-GPU work.
 from __future__ import annotations
 
 import os
+import inspect
 from typing import Any, Callable, Dict, Optional
 
 
@@ -84,20 +85,36 @@ class BagelModelPatcher:
                     self.attachments[ATTACHMENT_KEY] = bagel_state
                     # BAGEL-owned reload metadata (see module docstring).
                     self.reload_factory: Callable[..., "ModelPatcher"] = _make_reload_factory(
-                        self.checkpoint_identity, bagel_state
+                        self.checkpoint_identity, bagel_state, load_device, offload_device
                     )
                     # Record identity for inspection/logging only.
                     self.model_options["bagel_checkpoint"] = self.checkpoint_identity
 
-                def clone(self):
-                    n = super().clone()
+                def clone(
+                    self,
+                    disable_dynamic=False,
+                    model_override=None,
+                    force_deepcopy=False,
+                ):
+                    # Newer ComfyUI releases accept clone controls for deep and
+                    # multi-GPU copies, while older releases exposed clone()
+                    # without arguments. Preserve both APIs.
+                    clone_parameters = inspect.signature(super().clone).parameters
+                    clone_kwargs = {}
+                    if "disable_dynamic" in clone_parameters:
+                        clone_kwargs["disable_dynamic"] = disable_dynamic
+                    if "model_override" in clone_parameters:
+                        clone_kwargs["model_override"] = model_override
+                    if "force_deepcopy" in clone_parameters:
+                        clone_kwargs["force_deepcopy"] = force_deepcopy
+                    n = super().clone(**clone_kwargs)
                     # super().clone() rebuilt this instance via the base
                     # constructor (bagel_state=None); re-attach BAGEL state.
                     n.bagel_state = self.bagel_state
                     n.checkpoint_identity = self.checkpoint_identity
                     n.attachments[ATTACHMENT_KEY] = self.bagel_state
                     n.reload_factory = _make_reload_factory(
-                        n.checkpoint_identity, n.bagel_state
+                        n.checkpoint_identity, n.bagel_state, n.load_device, n.offload_device
                     )
                     return n
 
@@ -125,7 +142,12 @@ class BagelModelPatcher:
         )
 
 
-def _make_reload_factory(checkpoint_identity: Dict[str, Any], bagel_state: Dict[str, Any]):
+def _make_reload_factory(
+    checkpoint_identity: Dict[str, Any],
+    bagel_state: Dict[str, Any],
+    default_load_device=None,
+    default_offload_device=None,
+):
     """Return a callable that rebuilds the patcher from the immutable checkpoint.
 
     The factory closes over the checkpoint path and the previously attached
@@ -146,8 +168,8 @@ def _make_reload_factory(checkpoint_identity: Dict[str, Any], bagel_state: Dict[
                 "Cannot reload BAGEL from disk: checkpoint identity is missing "
                 f"or the file no longer exists ({path!r})."
             )
-        ld = load_device if load_device is not None else "cuda"
-        od = offload_device if offload_device is not None else "cpu"
+        ld = load_device if load_device is not None else default_load_device
+        od = offload_device if offload_device is not None else default_offload_device
         return load_native_bagel(
             path,
             load_device=ld,

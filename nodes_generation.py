@@ -2,16 +2,24 @@
 
 from __future__ import annotations
 
+import copy
+
 import comfy.model_management as model_management
 import torch
 
 from .modeling.bagel.runtime import (
     generate_latent,
+    generate_text,
     init_gen_context,
     update_context_text,
     validate_bagel_image_shape,
 )
-from .nodes_common import apply_seed, build_handle
+from .nodes_common import (
+    GEN_THINK_SYSTEM_PROMPT,
+    apply_seed,
+    build_handle,
+    require_bagel_capability,
+)
 
 
 class BAGELTextToImage:
@@ -27,13 +35,18 @@ class BAGELTextToImage:
             "required": {
                 "model": ("BAGEL_MODEL",),
                 "prompt": ("STRING", {"multiline": True, "default": "A photo of a cat"}),
-                "width": ("INT", {"default": 1024, "min": 256, "max": 2048, "step": 16}),
-                "height": ("INT", {"default": 1024, "min": 256, "max": 2048, "step": 16}),
+                "width": ("INT", {"default": 1024, "min": 256, "max": 1024, "step": 16}),
+                "height": ("INT", {"default": 1024, "min": 256, "max": 1024, "step": 16}),
                 "cfg_text_scale": ("FLOAT", {"default": 4.0, "min": 0.0, "max": 10.0, "step": 0.1}),
                 "cfg_img_scale": ("FLOAT", {"default": 1.5, "min": 0.0, "max": 10.0, "step": 0.1}),
                 "num_timesteps": ("INT", {"default": 50, "min": 1, "max": 100, "step": 1}),
                 "timestep_shift": ("FLOAT", {"default": 3.0, "min": 0.0, "max": 10.0, "step": 0.1}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
+                "show_thinking": ("BOOLEAN", {"default": False}),
+                "cfg_interval": ("FLOAT", {"default": 0.4, "min": 0.0, "max": 1.0, "step": 0.1}),
+                "cfg_renorm_min": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.1}),
+                "cfg_renorm_type": (["global", "local", "text_channel"], {"default": "global"}),
+                "text_temperature": ("FLOAT", {"default": 0.3, "min": 0.0, "max": 1.0, "step": 0.1}),
             }
         }
 
@@ -43,7 +56,9 @@ class BAGELTextToImage:
     CATEGORY = "BAGEL/Generation"
 
     def generate(self, model, prompt, width, height, cfg_text_scale, cfg_img_scale,
-                 num_timesteps, timestep_shift, seed):
+                 num_timesteps, timestep_shift, seed, show_thinking, cfg_interval,
+                 cfg_renorm_min, cfg_renorm_type, text_temperature):
+        require_bagel_capability(model, "text_to_image")
         model_management.load_models_gpu([model])
         handle = build_handle(model)
         m = handle["model"]
@@ -54,20 +69,37 @@ class BAGELTextToImage:
 
         with torch.autocast(device_type=device.type, dtype=torch.bfloat16):
             gen = init_gen_context(m)
+            cfg_text = init_gen_context(m)
+            cfg_img = init_gen_context(m)
+            if show_thinking:
+                gen = update_context_text(handle, GEN_THINK_SYSTEM_PROMPT, gen)
+                cfg_img = update_context_text(handle, GEN_THINK_SYSTEM_PROMPT, cfg_img)
+
+            # Preserve InterleaveInferencer's text ordering. cfg_text snapshots
+            # the context before the user prompt; cfg_img carries text only.
+            cfg_text = copy.deepcopy(gen)
             gen = update_context_text(handle, prompt, gen)
-            # Text-only unconditional/text branches for classifier-free guidance.
-            cfg_text = init_gen_context(m)                 # no text
-            cfg_img = update_context_text(handle, prompt, init_gen_context(m))  # text only
-            # cfg_img drops the (absent) image; cfg_text is unconditional.
+            cfg_img = update_context_text(handle, prompt, cfg_img)
+
+            reasoning = ""
+            if show_thinking:
+                reasoning = generate_text(
+                    handle, gen, max_length=1024, do_sample=False,
+                    temperature=text_temperature,
+                )
+                gen = update_context_text(handle, reasoning, gen)
 
             latent = generate_latent(
                 handle, gen, cfg_text, cfg_img, (height, width),
                 cfg_text_scale=cfg_text_scale,
                 cfg_img_scale=cfg_img_scale,
+                cfg_interval=(cfg_interval, 1.0),
+                cfg_renorm_min=cfg_renorm_min,
+                cfg_renorm_type=cfg_renorm_type,
                 num_timesteps=num_timesteps,
                 timestep_shift=timestep_shift,
             )
-        return (latent, "")
+        return (latent, reasoning)
 
 
 NODE_CLASS_MAPPINGS = {

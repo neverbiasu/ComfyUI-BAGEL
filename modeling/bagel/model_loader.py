@@ -46,6 +46,8 @@ from modeling.bagel.converted_format import (
 )
 from modeling.bagel.discovery import discover_converted_bagel as _discover_converted_bagel
 from modeling.bagel.model_patcher import BagelModelPatcher, make_vae_config
+from modeling.bagel.model_types import CapabilityTier
+from modeling.bagel.variants import detect_variant
 from modeling.qwen2.bagel_tokenizer import (
     REQUIRED_SPECIAL_TOKENS,
     load_packaged_tokenizer,
@@ -193,6 +195,19 @@ def _build_config(metadata: Optional[ConvertedBagelMetadata]):
     )
 
 
+def _tensor_keys(path: str) -> list[str]:
+    """Read safetensors keys without loading the checkpoint weights."""
+    with _sf_safe_open(path, framework="pt", device="cpu") as f:
+        return list(f.keys())
+
+
+def _default_comfy_devices():
+    """Ask ComfyUI for the active execution and offload devices."""
+    from comfy import model_management
+
+    return model_management.get_torch_device(), model_management.unet_offload_device()
+
+
 def _build_model(state_dict: Dict[str, torch.Tensor], config: BagelConfig) -> Bagel:
     """Build the coupled BAGEL skeleton on a meta device and assign weights."""
     from accelerate import init_empty_weights
@@ -320,8 +335,35 @@ def load_native_bagel(
             "conversion as runtime support."
         )
 
-    load_device = load_device or ("cuda" if torch.cuda.is_available() else "cpu")
-    offload_device = offload_device or "cpu"
+    if metadata:
+        descriptor = detect_variant(metadata, _tensor_keys(path))
+        if descriptor.tier != CapabilityTier.NATIVE:
+            raise NotImplementedError(
+                f"{descriptor.name or os.path.basename(path)} is detected as "
+                f"{descriptor.tier.value}, not as the validated BAGEL-7B-MoT BF16 "
+                "native runtime. Install or implement its dedicated adapter; do not "
+                "run it through the base BAGEL nodes. "
+                f"Detection: {descriptor.detection_source}."
+            )
+        descriptor_dict = descriptor.to_dict()
+    else:
+        # Legacy converted files without metadata retain the documented base
+        # fallback. They cannot be structurally identified beyond the strict
+        # base model construction check below.
+        descriptor_dict = {
+            "name": "BAGEL-7B-MoT",
+            "architecture": "Bagel",
+            "variant": "BAGEL-7B-MoT",
+            "dtype": "bf16",
+            "quantization": "none",
+            "tier": CapabilityTier.NATIVE.value,
+            "capabilities": ["text_to_image", "image_edit", "image_understanding"],
+            "detection_source": "metadata-free base fallback",
+        }
+
+    default_load_device, default_offload_device = _default_comfy_devices()
+    load_device = load_device or default_load_device
+    offload_device = offload_device or default_offload_device
 
     state_dict = _sf_torch.load_file(path, device="cpu")
     config = _build_config(metadata)
@@ -343,6 +385,10 @@ def load_native_bagel(
         "start_of_image": tokenizer.convert_tokens_to_ids("<|vision_start|>"),
         "end_of_image": tokenizer.convert_tokens_to_ids("<|vision_end|>"),
     }
+    # Keep the two original transforms distinct: image conditioning is resized
+    # with the VAE transform before its VIT pass; NaViT performs its own final
+    # 980/224/14 processing inside ``prepare_vit_images``.
+    image_transform = ImageTransform(1024, 512, 16)
     vit_transform = ImageTransform(980, 224, 14)
 
     checkpoint_identity = {
@@ -356,7 +402,9 @@ def load_native_bagel(
     bagel_state = {
         "tokenizer": tokenizer,
         "new_token_ids": new_token_ids,
+        "image_transform": image_transform,
         "vit_transform": vit_transform,
+        "variant_descriptor": descriptor_dict,
         "metadata": metadata.to_dict() if metadata else {
             "format": "fallback",
             "format_version": 0,
@@ -381,6 +429,18 @@ def load_native_bagel(
         bagel_state,
         checkpoint_identity,
     )
+
+    def _cached_loader(*, disable_dynamic=False):
+        # ModelPatcher.clone(force_deepcopy=True) invokes this factory with
+        # disable_dynamic=True. BAGEL is not dynamic, so the flag is accepted
+        # for API compatibility and intentionally has no effect.
+        return load_native_bagel(
+            path,
+            load_device=load_device,
+            offload_device=offload_device,
+        )
+
+    patcher.cached_patcher_init = (_cached_loader, ())
     print(
         f"[BAGEL] loaded model from {path} "
         f"(variant={checkpoint_identity['variant']}, dtype={checkpoint_identity['dtype']})"

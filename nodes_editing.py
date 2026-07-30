@@ -23,7 +23,14 @@ from .modeling.bagel.runtime import (
     update_vit_image,
     validate_bagel_image_shape,
 )
-from .nodes_common import apply_seed, build_handle, comfy_image_to_pil
+from .nodes_common import (
+    GEN_THINK_SYSTEM_PROMPT,
+    apply_seed,
+    build_handle,
+    comfy_image_to_pil,
+    require_bagel_capability,
+    require_single_image_batch,
+)
 
 
 class BAGELImageEdit:
@@ -36,10 +43,15 @@ class BAGELImageEdit:
                 "vae_latent": ("LATENT", {"tooltip": "Output of the official FLUX VAEEncode on the source image"}),
                 "prompt": ("STRING", {"multiline": True, "default": "Make it snowy"}),
                 "cfg_text_scale": ("FLOAT", {"default": 4.0, "min": 0.0, "max": 10.0, "step": 0.1}),
-                "cfg_img_scale": ("FLOAT", {"default": 1.5, "min": 0.0, "max": 10.0, "step": 0.1}),
+                "cfg_img_scale": ("FLOAT", {"default": 2.0, "min": 0.0, "max": 10.0, "step": 0.1}),
                 "num_timesteps": ("INT", {"default": 50, "min": 1, "max": 100, "step": 1}),
                 "timestep_shift": ("FLOAT", {"default": 3.0, "min": 0.0, "max": 10.0, "step": 0.1}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
+                "show_thinking": ("BOOLEAN", {"default": False}),
+                "cfg_interval": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.1}),
+                "cfg_renorm_min": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.1}),
+                "cfg_renorm_type": (["global", "local", "text_channel"], {"default": "text_channel"}),
+                "text_temperature": ("FLOAT", {"default": 0.3, "min": 0.0, "max": 1.0, "step": 0.1}),
             }
         }
 
@@ -49,7 +61,13 @@ class BAGELImageEdit:
     CATEGORY = "BAGEL/Editing"
 
     def edit(self, model, image, vae_latent, prompt, cfg_text_scale, cfg_img_scale,
-             num_timesteps, timestep_shift, seed):
+             num_timesteps, timestep_shift, seed, show_thinking, cfg_interval,
+             cfg_renorm_min, cfg_renorm_type, text_temperature):
+        require_bagel_capability(model, "image_edit")
+        require_single_image_batch(image)
+        if "samples" not in vae_latent:
+            raise ValueError("BAGEL vae_latent must contain the ComfyUI 'samples' tensor")
+        require_single_image_batch(vae_latent["samples"], name="vae_latent.samples")
         model_management.load_models_gpu([model])
         handle = build_handle(model)
         m = handle["model"]
@@ -62,6 +80,19 @@ class BAGELImageEdit:
         validate_bagel_image_shape(m, (H, W))
 
         pil = comfy_image_to_pil(image)
+        if tuple(image.shape[1:3]) != (H, W):
+            raise ValueError(
+                "BAGEL IMAGE and VAEEncode LATENT describe different sizes: "
+                f"IMAGE is {tuple(image.shape[1:3])}, LATENT is {(H, W)}. "
+                "Connect the same preprocessed image to BAGEL Image Edit and VAEEncode."
+            )
+        expected_size = handle["image_transform"].resize_transform(pil).size
+        if expected_size != pil.size:
+            raise ValueError(
+                f"BAGEL source image {pil.size[1]}x{pil.size[0]} must be preprocessed "
+                f"to {expected_size[1]}x{expected_size[0]} before both VAEEncode and "
+                "BAGEL Image Edit. Use an official ImageScale node."
+            )
 
         apply_seed(seed)
 
@@ -73,20 +104,36 @@ class BAGELImageEdit:
             # 4) prompt added to gen (full image+text conditioning)
             # 5) cfg_img is text-only (prompt built from an empty context)
             gen = init_gen_context(m)
+            cfg_img = init_gen_context(m)
+            if show_thinking:
+                gen = update_context_text(handle, GEN_THINK_SYSTEM_PROMPT, gen)
+                cfg_img = update_context_text(handle, GEN_THINK_SYSTEM_PROMPT, cfg_img)
             gen = update_vae_latent_from_latent(handle, vae_tensor, gen)
             gen = update_vit_image(handle, pil, gen)
             cfg_text = copy.deepcopy(gen)  # image-only baseline (text dropped)
             gen = update_context_text(handle, prompt, gen)  # full (image+text)
-            cfg_img = update_context_text(handle, prompt, init_gen_context(m))  # text-only
+            cfg_img = update_context_text(handle, prompt, cfg_img)  # text-only
+
+            reasoning = ""
+            if show_thinking:
+                from .modeling.bagel.runtime import generate_text
+                reasoning = generate_text(
+                    handle, gen, max_length=1024, do_sample=False,
+                    temperature=text_temperature,
+                )
+                gen = update_context_text(handle, reasoning, gen)
 
             latent = generate_latent(
                 handle, gen, cfg_text, cfg_img, (H, W),
                 cfg_text_scale=cfg_text_scale,
                 cfg_img_scale=cfg_img_scale,
+                cfg_interval=(cfg_interval, 1.0),
+                cfg_renorm_min=cfg_renorm_min,
+                cfg_renorm_type=cfg_renorm_type,
                 num_timesteps=num_timesteps,
                 timestep_shift=timestep_shift,
             )
-        return (latent, "")
+        return (latent, reasoning)
 
 
 NODE_CLASS_MAPPINGS = {
