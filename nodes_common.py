@@ -12,6 +12,8 @@ layer), never on ``nodes.py`` or another node module.
 
 from __future__ import annotations
 
+import random
+
 import numpy as np
 import torch
 from PIL import Image
@@ -19,6 +21,9 @@ from PIL import Image
 
 GEN_THINK_SYSTEM_PROMPT = """You should first think about the planning process in the mind and then generate the image.
 The planning process is enclosed within <think> </think> tags, i.e. <think> planning process here </think> image here"""
+
+VLM_THINK_SYSTEM_PROMPT = """You should first think about the reasoning process in the mind and then provide the user with the answer.
+The reasoning process is enclosed within <think> </think> tags, i.e. <think> reasoning process here </think> answer here"""
 
 def build_handle(patcher) -> dict:
     """Extract the runtime handle from a ``BAGEL_MODEL`` patcher.
@@ -58,11 +63,17 @@ def require_bagel_capability(patcher, capability: str) -> None:
 
 
 def apply_seed(seed: int) -> None:
-    """Seed torch (and torch.cuda) deterministically for reproducible runs."""
+    """Match the official app: positive seeds are deterministic; zero is unset."""
+    if int(seed) <= 0:
+        return
+    random.seed(int(seed))
+    np.random.seed(int(seed))
     torch.manual_seed(int(seed))
     if torch.cuda.is_available():
         try:
             torch.cuda.manual_seed_all(int(seed))
+            torch.backends.cudnn.deterministic = True
+            torch.backends.cudnn.benchmark = False
         except Exception:
             pass
 

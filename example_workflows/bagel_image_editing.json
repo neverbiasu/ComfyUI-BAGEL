@@ -350,8 +350,15 @@
         "Make the girl's hair to pink",
         4,
         1.5,
-        50,
+        0,
         3,
+        50,
+        0,
+        "text_channel",
+        false,
+        1024,
+        false,
+        0.3,
         494048760037423,
         "randomize"
       ]

@@ -12,6 +12,7 @@ from .modeling.bagel.runtime import (
     update_vit_image,
 )
 from .nodes_common import (
+    VLM_THINK_SYSTEM_PROMPT,
     build_handle,
     comfy_image_to_pil,
     require_bagel_capability,
@@ -30,12 +31,13 @@ class BAGELImageUnderstanding:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "model": ("BAGEL_MODEL",),
-                "image": ("IMAGE",),
-                "prompt": ("STRING", {"multiline": True, "default": "Describe this image."}),
-                "max_length": ("INT", {"default": 500, "min": 1, "max": 2000, "step": 1}),
-                "temperature": ("FLOAT", {"default": 0.3, "min": 0.0, "max": 2.0, "step": 0.05}),
-                "do_sample": ("BOOLEAN", {"default": False}),
+                "model": ("BAGEL_MODEL", {"tooltip": "Native BAGEL model from BAGEL Model Loader."}),
+                "image": ("IMAGE", {"tooltip": "Image to analyse. It is resized with BAGEL's official 1024/512/16 preprocessing."}),
+                "prompt": ("STRING", {"multiline": True, "default": "Can someone explain what's funny about this meme??", "tooltip": "Question or instruction about the image."}),
+                "show_thinking": ("BOOLEAN", {"default": False, "tooltip": "Ask BAGEL to include its reasoning in the returned text."}),
+                "do_sample": ("BOOLEAN", {"default": False, "tooltip": "Enable sampling for text generation."}),
+                "text_temperature": ("FLOAT", {"default": 0.3, "min": 0.0, "max": 1.0, "step": 0.05, "tooltip": "Text-generation randomness; 0 is deterministic and 1 is more creative."}),
+                "max_new_tokens": ("INT", {"default": 512, "min": 64, "max": 4096, "step": 64, "tooltip": "Maximum generated text length, including optional reasoning."}),
             }
         }
 
@@ -45,7 +47,8 @@ class BAGELImageUnderstanding:
     OUTPUT_NODE = True
     CATEGORY = "BAGEL/Understanding"
 
-    def understand(self, model, image, prompt, max_length, temperature, do_sample):
+    def understand(self, model, image, prompt, show_thinking, do_sample,
+                   text_temperature, max_new_tokens):
         require_bagel_capability(model, "image_understanding")
         require_single_image_batch(image)
         model_management.load_models_gpu([model])
@@ -61,11 +64,13 @@ class BAGELImageUnderstanding:
             # Legacy image-then-text ordering (InterleaveInferencer.__call__):
             # ViT tokens (source image) are added before the prompt text.
             gen = init_gen_context(m)
+            if show_thinking:
+                gen = update_context_text(handle, VLM_THINK_SYSTEM_PROMPT, gen)
             gen = update_vit_image(handle, pil, gen)
             gen = update_context_text(handle, prompt, gen)
             text = generate_text(
-                handle, gen, max_length=max_length,
-                temperature=temperature, do_sample=do_sample,
+                handle, gen, max_length=max_new_tokens,
+                temperature=text_temperature, do_sample=do_sample,
             )
         return {"ui": {"text": [text]}, "result": (text,)}
 

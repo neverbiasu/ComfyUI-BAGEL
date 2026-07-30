@@ -48,9 +48,10 @@
       },
       "widgets_values": [
         "Describe this image in detail.",
-        500,
-        1,
-        true
+        false,
+        false,
+        0.3,
+        512
       ]
     },
     {

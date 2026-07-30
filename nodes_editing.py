@@ -38,20 +38,22 @@ class BAGELImageEdit:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "model": ("BAGEL_MODEL",),
-                "image": ("IMAGE", {"tooltip": "Source image; fed through the ViT encoder"}),
-                "vae_latent": ("LATENT", {"tooltip": "Output of the official FLUX VAEEncode on the source image"}),
-                "prompt": ("STRING", {"multiline": True, "default": "Make it snowy"}),
-                "cfg_text_scale": ("FLOAT", {"default": 4.0, "min": 0.0, "max": 10.0, "step": 0.1}),
-                "cfg_img_scale": ("FLOAT", {"default": 2.0, "min": 0.0, "max": 10.0, "step": 0.1}),
-                "num_timesteps": ("INT", {"default": 50, "min": 1, "max": 100, "step": 1}),
-                "timestep_shift": ("FLOAT", {"default": 3.0, "min": 0.0, "max": 10.0, "step": 0.1}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
-                "show_thinking": ("BOOLEAN", {"default": False}),
-                "cfg_interval": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.1}),
-                "cfg_renorm_min": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.1}),
-                "cfg_renorm_type": (["global", "local", "text_channel"], {"default": "text_channel"}),
-                "text_temperature": ("FLOAT", {"default": 0.3, "min": 0.0, "max": 1.0, "step": 0.1}),
+                "model": ("BAGEL_MODEL", {"tooltip": "Native BAGEL model from BAGEL Model Loader."}),
+                "image": ("IMAGE", {"tooltip": "Source image for BAGEL's ViT encoder. It must be the same preprocessed image sent to VAEEncode."}),
+                "vae_latent": ("LATENT", {"tooltip": "Output of the official FLUX VAEEncode on the same preprocessed source image."}),
+                "prompt": ("STRING", {"multiline": True, "default": "She boards a modern subway, quietly reading a folded newspaper, wearing the same clothes.", "tooltip": "Instruction describing the requested edit."}),
+                "cfg_text_scale": ("FLOAT", {"default": 4.0, "min": 1.0, "max": 8.0, "step": 0.1, "tooltip": "Controls how strongly BAGEL follows the edit prompt."}),
+                "cfg_img_scale": ("FLOAT", {"default": 2.0, "min": 1.0, "max": 4.0, "step": 0.1, "tooltip": "Controls preservation of input-image details."}),
+                "cfg_interval": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.1, "tooltip": "Start of the CFG interval. The end is fixed at 1.0."}),
+                "timestep_shift": ("FLOAT", {"default": 3.0, "min": 1.0, "max": 10.0, "step": 0.5, "tooltip": "Shifts denoising-step allocation: higher favours layout, lower favours detail."}),
+                "num_timesteps": ("INT", {"default": 50, "min": 10, "max": 100, "step": 5, "tooltip": "Total denoising steps."}),
+                "cfg_renorm_min": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.1, "tooltip": "CFG-Renorm minimum. 1.0 disables CFG-Renorm."}),
+                "cfg_renorm_type": (["global", "local", "text_channel"], {"default": "text_channel", "tooltip": "CFG-Renorm method. text_channel is the official image-edit default."}),
+                "show_thinking": ("BOOLEAN", {"default": False, "tooltip": "Generate and return the model planning text before image sampling."}),
+                "max_think_tokens": ("INT", {"default": 1024, "min": 64, "max": 4096, "step": 64, "tooltip": "Maximum planning tokens when Thinking is enabled."}),
+                "do_sample": ("BOOLEAN", {"default": False, "tooltip": "Enable sampling for planning-text generation when Thinking is enabled."}),
+                "text_temperature": ("FLOAT", {"default": 0.3, "min": 0.1, "max": 1.0, "step": 0.1, "tooltip": "Planning-text randomness when Thinking is enabled."}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 1000000, "step": 1, "tooltip": "0 leaves the seed unset, matching the official app; positive values are reproducible."}),
             }
         }
 
@@ -61,8 +63,9 @@ class BAGELImageEdit:
     CATEGORY = "BAGEL/Editing"
 
     def edit(self, model, image, vae_latent, prompt, cfg_text_scale, cfg_img_scale,
-             num_timesteps, timestep_shift, seed, show_thinking, cfg_interval,
-             cfg_renorm_min, cfg_renorm_type, text_temperature):
+             cfg_interval, timestep_shift, num_timesteps, cfg_renorm_min,
+             cfg_renorm_type, show_thinking, max_think_tokens, do_sample,
+             text_temperature, seed):
         require_bagel_capability(model, "image_edit")
         require_single_image_batch(image)
         if "samples" not in vae_latent:
@@ -118,7 +121,7 @@ class BAGELImageEdit:
             if show_thinking:
                 from .modeling.bagel.runtime import generate_text
                 reasoning = generate_text(
-                    handle, gen, max_length=1024, do_sample=False,
+                    handle, gen, max_length=max_think_tokens, do_sample=do_sample,
                     temperature=text_temperature,
                 )
                 gen = update_context_text(handle, reasoning, gen)
