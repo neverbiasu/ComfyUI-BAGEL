@@ -353,9 +353,38 @@ def main() -> int:
         if set(info["key_mapping"].values()) != written:
             print("ERROR: written keys differ from normalized keys", file=sys.stderr)
             raise RuntimeError("written keys differ from normalized keys")
-        if "comfyui_bagel" not in header_meta:
+        raw_metadata = header_meta.get("comfyui_bagel")
+        if not raw_metadata:
             print("ERROR: metadata header missing from converted file", file=sys.stderr)
             raise RuntimeError("metadata header missing from converted file")
+        try:
+            written_metadata = json.loads(raw_metadata)
+        except (TypeError, json.JSONDecodeError) as exc:
+            raise RuntimeError(
+                "converted file contains invalid comfyui_bagel metadata JSON"
+            ) from exc
+        required_metadata = {
+            "format",
+            "format_version",
+            "architecture",
+            "dtype",
+            "capabilities",
+            "model_configs",
+            "converter_version",
+        }
+        missing_metadata = sorted(required_metadata - set(written_metadata))
+        if missing_metadata or written_metadata.get("format") != "comfyui_bagel":
+            raise RuntimeError(
+                "converted file metadata is incomplete or has the wrong format: "
+                f"missing={missing_metadata}, format={written_metadata.get('format')!r}"
+            )
+        if not isinstance(written_metadata.get("model_configs"), dict) or not {
+            "llm_config.json",
+            "vit_config.json",
+        }.issubset(written_metadata["model_configs"]):
+            raise RuntimeError(
+                "converted file metadata must embed llm_config.json and vit_config.json"
+            )
 
         # Atomic replace -- the existing --force destination is untouched until
         # this point, so a failed conversion never clobbers a good output.

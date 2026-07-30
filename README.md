@@ -2,7 +2,11 @@
 
 A ComfyUI custom node package for BAGEL-7B-MoT with native ComfyUI model loading.
 
-## Native ComfyUI layout
+<p align="center">
+  <img src="https://lf3-static.bytednsdoc.com/obj/eden-cn/nuhojubrps/banner.png" alt="BAGEL" width="480"/>
+</p>
+
+## Model paths
 
 | Component | Recommended source | Put it here | Loaded by |
 | --- | --- | --- | --- |
@@ -14,20 +18,26 @@ A ComfyUI custom node package for BAGEL-7B-MoT with native ComfyUI model loading
 
 > Recommended: download the single-file model from `6chan/bagel_comfy`.
 > If you already have the original BAGEL checkpoint, either convert it with
-> `scripts/convert_bagel_model.py` or re-download the converted file.
+> `scripts/convert_bagel_model.py` or re-download the converted file. The
+> converter embeds and validates the `comfyui_bagel` metadata header, including
+> the model configs needed by the native loader.
 > If the Hugging Face repository also contains config files, treat them as
 > conversion/audit references. The native ComfyUI loader does not require users
 > to copy config files into `models/bagel`.
 
 ## Install
 
-| Step | Action |
-| --- | --- |
-| 1 | Clone this repository into `ComfyUI/custom_nodes/ComfyUI-BAGEL`. |
-| 2 | Install Python dependencies with `pip install -r requirements.txt`. |
-| 3 | Download a BAGEL `.safetensors` from [`6chan/bagel_comfy`](https://huggingface.co/6chan/bagel_comfy) into `ComfyUI/models/bagel/`. |
-| 4 | Put FLUX `ae.safetensors` into `ComfyUI/models/vae/`. |
-| 5 | Restart ComfyUI and load one of the native workflows below. |
+1. Clone this repository into `ComfyUI/custom_nodes/ComfyUI-BAGEL`.
+2. Install the node-specific dependencies:
+
+   ```bash
+   cd ComfyUI/custom_nodes/ComfyUI-BAGEL
+   pip install -r requirements.txt
+   ```
+
+3. Download a BAGEL `.safetensors` from [`6chan/bagel_comfy`](https://huggingface.co/6chan/bagel_comfy) into `ComfyUI/models/bagel/`.
+4. Put FLUX `ae.safetensors` into `ComfyUI/models/vae/`.
+5. Restart ComfyUI and load one of the native workflows below.
 
 ### Existing old-model users
 
@@ -74,7 +84,7 @@ Legacy auto-download and all-in-one loader instructions were moved to
 | Legacy DFloat11 generation | deprecated workflows | 21.76 GB reported for 1024x1024 | old README reported 154.39 s on RTX 4090 |
 | Legacy standard generation | deprecated workflows | 30.07 GB reported for 1024x1024 | old README reported 482.95 s on RTX 4090 |
 
-## Future model support plan
+## TODO: model variant support
 
 Future BAGEL variants will be tracked from the
 [`6chan/bagel`](https://huggingface.co/collections/6chan/bagel) collection. The
@@ -87,6 +97,7 @@ logic.
 | Image editing / NHR editing | `iitolstykh/Bagel-NHR-Edit`, `Bagel-NHR-Edit-V2` | image + edit prompt -> image | first try native image-edit adapter; add a dedicated edit node if prompt/image order differs |
 | Reasoning / VQA variants | `multimodal-reasoning-lab/Bagel-Zebra-CoT`, `sensenova/SenseNova-SI-1.1-BAGEL-7B-MoT` | image + text -> text | adapt `BAGEL Image Understanding`; add reasoning-specific controls if needed |
 | Text-to-image variants | `Wayne-King/SRUM_BAGEL_7B_MoT`, `Ryann829/Scone`, `LLM-Drop/*GEN*`, `Yanran21/UniGenDet` | text -> image | adapt `BAGEL Text to Image`; add model-specific generation options only when required |
+| SIGMA variants | SIGMA checkpoints in the collection and related releases | style/subject or structured conditioning -> image | add a SIGMA-specific loader/conditioning node after its checkpoint metadata and reference workflow are verified |
 | Quantized formats | `DFloat11/*`, FP8, INT8, GGUF, AutoRound INT4 | same tasks, different weight format/runtime | separate loader/converter path; do not mix into the BF16 loader unless the state dict is compatible |
 | Specialized any-to-any / composition | `ThinkMorph`, `Uni-Edit`, `UniCorn`, `ConsistCompose`, `Echo-4o`, `SenseNova-Vision` | may add multi-image, identity, composition, or agentic conditioning | inspect model card + sample code first; add new nodes when graph inputs differ from the base BAGEL tasks |
 
