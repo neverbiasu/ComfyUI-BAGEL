@@ -5,79 +5,6 @@
   "last_link_id": 3,
   "nodes": [
     {
-      "id": 1,
-      "type": "BAGELModelLoader",
-      "pos": [
-        80,
-        120
-      ],
-      "size": [
-        340,
-        90
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "label": "model",
-          "name": "model",
-          "type": "BAGEL_MODEL",
-          "links": [
-            1
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfyui-bagel",
-        "Node name for S&R": "BAGELModelLoader"
-      },
-      "widgets_values": [
-        "bagel-7b-moT-bf16.safetensors"
-      ]
-    },
-    {
-      "id": 2,
-      "type": "LoadImage",
-      "pos": [
-        80,
-        280
-      ],
-      "size": [
-        340,
-        314
-      ],
-      "flags": {},
-      "order": 1,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "label": "IMAGE",
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            2
-          ]
-        },
-        {
-          "label": "MASK",
-          "name": "MASK",
-          "type": "MASK",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "Node name for S&R": "LoadImage"
-      },
-      "widgets_values": [
-        "meme.jpg",
-        "image"
-      ]
-    },
-    {
       "id": 3,
       "type": "BAGELImageUnderstanding",
       "pos": [
@@ -116,14 +43,87 @@
         }
       ],
       "properties": {
-        "cnr_id": "comfyui-bagel",
-        "Node name for S&R": "BAGELImageUnderstanding"
+        "Node name for S&R": "BAGELImageUnderstanding",
+        "cnr_id": "comfyui-bagel"
       },
       "widgets_values": [
         "Describe this image in detail.",
         500,
-        1.0,
+        1,
         true
+      ]
+    },
+    {
+      "id": 1,
+      "type": "BAGELModelLoader",
+      "pos": [
+        80,
+        120
+      ],
+      "size": [
+        340,
+        90
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "label": "model",
+          "name": "model",
+          "type": "BAGEL_MODEL",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BAGELModelLoader",
+        "cnr_id": "comfyui-bagel"
+      },
+      "widgets_values": [
+        "bagel-7b-mot.safetensors"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        80,
+        280
+      ],
+      "size": [
+        340,
+        314
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "label": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        },
+        {
+          "label": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "cnr_id": "comfy-core"
+      },
+      "widgets_values": [
+        "meme.jpg",
+        "image"
       ]
     },
     {
@@ -134,8 +134,8 @@
         180
       ],
       "size": [
-        360,
-        260
+        368.9765625,
+        372.33203125
       ],
       "flags": {},
       "order": 3,
@@ -158,11 +158,11 @@
         }
       ],
       "properties": {
-        "cnr_id": "comfyui-custom-scripts",
-        "Node name for S&R": "ShowText|pysssss"
+        "Node name for S&R": "ShowText|pysssss",
+        "cnr_id": "comfyui-custom-scripts"
       },
       "widgets_values": [
-        ""
+        "The image features a series of text blocks with handwriting samples. At the top, in bold white text on a black background, the statement reads \"My Handwriting In Exams.\" Below this heading, there are three sections labeled \"First two pages,\" \"Middle pages,\" and \"Last two pages.\" Each section contains a photograph of a handwritten page on lined paper. The handwriting becomes progressively more disorganized and difficult to read as it moves from the top to the bottom of the image.\n\nThe first two pages show neat and clear handwriting with legible text, although the words are somewhat slanted. The middle pages display stairs-like handwriting, with more legible words at the hoops and less clarity in between. The last two pages show handwriting that is much harder to decipher, with significant slant and a mix of letters that appear jumbled due to unfocused or rapid writing.\n\nAt the very bottom of the image, there is a part of an electrocardiogram (ECG) graph with fluctuating lines, possibly indicating the subject's physical change or emotional response under the stress of the exam. The contrast between the neat handwriting at the beginning and the chaotic handwriting at the end of the pages suggests a humorous take on the decline in exam performance related to handwriting complexity."
       ]
     }
   ],
@@ -198,10 +198,11 @@
     "ds": {
       "scale": 1,
       "offset": [
-        0,
-        0
+        20,
+        -20
       ]
-    }
+    },
+    "frontendVersion": "1.45.20"
   },
   "version": 0.4
 }

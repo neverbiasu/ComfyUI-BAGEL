@@ -2,7 +2,7 @@
   "id": "7f69d8ca-1ec0-4f43-9be6-bc8003c9b8f5",
   "revision": 0,
   "last_node_id": 8,
-  "last_link_id": 6,
+  "last_link_id": 7,
   "nodes": [
     {
       "id": 4,
@@ -65,41 +65,16 @@
           "link": 2
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "properties": {},
       "widgets_values": [
         "bagel"
-      ]
-    },
-    {
-      "id": 1,
-      "type": "BAGELModelLoader",
-      "pos": [
-        3.65484619140625,
-        159.2088623046875
-      ],
-      "size": [
-        288.9888610839844,
-        58
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "model",
-          "type": "BAGEL_MODEL",
-          "links": [
-            5
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "BAGELModelLoader"
-      },
-      "widgets_values": [
-        "bagel-7b-moT-bf16.safetensors"
       ]
     },
     {
@@ -116,7 +91,7 @@
       "flags": {
         "collapsed": true
       },
-      "order": 1,
+      "order": 0,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -133,6 +108,37 @@
       },
       "widgets_values": [
         "ae.safetensors"
+      ]
+    },
+    {
+      "id": 1,
+      "type": "BAGELModelLoader",
+      "pos": [
+        3.65484619140625,
+        159.2088623046875
+      ],
+      "size": [
+        288.9888610839844,
+        58
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "BAGEL_MODEL",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BAGELModelLoader"
+      },
+      "widgets_values": [
+        "bagel-7b-mot.safetensors"
       ]
     },
     {
@@ -153,7 +159,7 @@
         {
           "name": "model",
           "type": "BAGEL_MODEL",
-          "link": 5
+          "link": 7
         }
       ],
       "outputs": [
@@ -177,11 +183,11 @@
         "cute anime style girl with massive fluffy fennec ears and a big fluffy tail blonde messy long hair blue eyes wearing a maid outfit with a long black gold leaf pattern dress and a white apron, it is a postcard held by a hand in front of a beautiful realistic city at sunset and there is cursive writing that says \"Bagel, Now in ComfyUI\"",
         1024,
         1024,
-        4,
+        5,
         1.5,
         50,
-        3,
-        1077230982259293,
+        4,
+        493218878032302,
         "randomize"
       ]
     }
@@ -204,33 +210,33 @@
       "IMAGE"
     ],
     [
-      5,
-      1,
-      0,
-      8,
-      0,
-      "BAGEL_MODEL"
-    ],
-    [
       6,
       8,
       0,
       4,
       0,
       "LATENT"
+    ],
+    [
+      7,
+      1,
+      0,
+      8,
+      0,
+      "BAGEL_MODEL"
     ]
   ],
   "groups": [],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 1.4641000000000008,
+      "scale": 1,
       "offset": [
-        -213.67485454955028,
-        28.199184964481425
+        96.34515380859375,
+        0.34356689453125
       ]
     },
-    "frontendVersion": "1.20.7"
+    "frontendVersion": "1.45.20"
   },
   "version": 0.4
 }
