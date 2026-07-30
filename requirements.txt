@@ -4,10 +4,6 @@ huggingface_hub
 matplotlib
 opencv_python
 pyarrow
-safetensors
-scipy
-sentencepiece
-transformers
 accelerate
 # Optional / CUDA-only (do not install on CPU or macOS):
 #   flash_attn   -> pip install "comfyui-bagel[cuda]"

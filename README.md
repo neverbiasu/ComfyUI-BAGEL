@@ -4,17 +4,6 @@ A ComfyUI custom node package for BAGEL-7B-MoT with native ComfyUI model loading
 
 ## Native ComfyUI layout
 
-```mermaid
-flowchart LR
-    A["6chan/bagel_comfy<br/>single-file BAGEL safetensors"] --> B["ComfyUI/models/bagel"]
-    C["FLUX AE<br/>ae.safetensors"] --> D["ComfyUI/models/vae"]
-    E["Packaged Qwen tokenizer<br/>inside this custom node"] --> F["BAGEL Model Loader"]
-    B --> F
-    D --> G["Official VAELoader / VAEEncode / VAEDecode"]
-    F --> H["BAGEL native nodes"]
-    G --> H
-```
-
 | Component | Recommended source | Put it here | Loaded by |
 | --- | --- | --- | --- |
 | BAGEL main model | [`6chan/bagel_comfy`](https://huggingface.co/6chan/bagel_comfy) single-file `.safetensors` | `ComfyUI/models/bagel/` | `BAGEL Model Loader` |
@@ -53,31 +42,11 @@ Legacy auto-download and all-in-one loader instructions were moved to
 
 ## Workflows
 
-```mermaid
-flowchart TB
-    subgraph T2I["Text to image"]
-        M1["BAGEL Model Loader"] --> T["BAGEL Text to Image"]
-        V1["VAELoader ae.safetensors"] --> D1["VAEDecode"]
-        T --> D1 --> S1["SaveImage"]
-    end
+![BAGEL text-to-image workflow](example_workflows/bagel_text_to_image.png)
 
-    subgraph EDIT["Image editing"]
-        I["LoadImage"] --> R["ImageScale (16-aligned)"]
-        R --> E["BAGEL Image Edit"]
-        R --> VE["VAEEncode"]
-        V2["VAELoader ae.safetensors"] --> VE
-        VE --> E
-        M2["BAGEL Model Loader"] --> E
-        E --> D2["VAEDecode"] --> S2["SaveImage"]
-        V2 --> D2
-    end
+![BAGEL image-editing workflow](example_workflows/bagel_image_editing.png)
 
-    subgraph VQA["Image understanding"]
-        I2["LoadImage"] --> U["BAGEL Image Understanding"]
-        M3["BAGEL Model Loader"] --> U
-        U --> TXT["Show Text / Preview as Text"]
-    end
-```
+![BAGEL image-understanding workflow](example_workflows/bagel_image_understanding.png)
 
 | Workflow | File | Extra nodes | Notes |
 | --- | --- | --- | --- |
@@ -112,16 +81,6 @@ Future BAGEL variants will be tracked from the
 support path depends on each model's file format, modality inputs, and inference
 logic.
 
-```mermaid
-flowchart LR
-    C["6chan/bagel collection"] --> A["Same BAGEL runtime shape"]
-    C --> B["Different conditioning / task logic"]
-    C --> D["Different weight format"]
-    A --> A1["Add metadata + reuse native nodes"]
-    B --> B1["Add adapter or new task node"]
-    D --> D1["Add converter / loader support"]
-```
-
 | Variant family | Example models in collection | Input / output shape | Planned ComfyUI support |
 | --- | --- | --- | --- |
 | Base BAGEL any-to-any | `ByteDance-Seed/BAGEL-7B-MoT`, `6chan/bagel_comfy` | text, image, latent -> text/image | current native nodes |
@@ -139,25 +98,38 @@ flowchart LR
 | Workflow | Add or update an example workflow with official ComfyUI nodes where possible. |
 | Benchmark | Record GPU, VRAM peak, image size, steps, and wall-clock time. |
 
-## Free / low-cost GPU candidates for validation
+## Contribution
 
-These are candidates for installation/import checks or small smoke tests. Full
-native BF16 generation is likely to need more VRAM than most free GPUs provide.
+Contributions are welcome. Please open an issue for compatibility problems,
+variant support requests, or proposed changes before submitting a pull request.
+For code changes, include the affected workflow and the ComfyUI version used for
+validation when possible.
 
-| Platform | Free GPU situation | Fit for this repo | Caveat |
-| --- | --- | --- | --- |
-| Google Colab Free | Free notebooks can access GPUs/TPUs, but resources are not guaranteed and usage limits fluctuate. | Good for scripted install/import or conversion smoke tests. | Colab free tier may terminate Web UI style usage; official FAQ says free runtimes are prioritized for interactive notebooks, not web services. |
-| Kaggle Notebooks | Usually offers free notebook GPUs with quota. | Good for notebook-based import and possibly image-understanding smoke tests. | GPU type/quota must be checked at runtime; web UI exposure is awkward. |
-| AWS SageMaker Studio Lab | Historically offers free notebook CPU/GPU sessions. | Good fallback for notebook smoke tests. | Availability and GPU session limits must be checked before use. |
-| Lightning AI Studios | May provide starter/free credits depending on account/region. | Better than notebooks if it allows a web app port for ComfyUI. | Free-credit availability changes; verify before relying on it. |
-| AutoDL / other hourly GPU clouds | Not free, but cheap and predictable. | Best practical fallback for full ComfyUI UI validation if Modal budget is gone. | Requires paying for enough VRAM; V100-32G may be tight but worth trying. |
+## FAQ
 
-Sources to verify before choosing a free platform:
+### Which model should I download?
 
-- [Google Colab FAQ](https://research.google.com/colaboratory/faq.html)
-- [Kaggle Notebooks documentation](https://www.kaggle.com/docs/notebooks)
-- [AWS SageMaker Studio Lab FAQ](https://studiolab.sagemaker.aws/faq)
-- [Lightning AI Studios](https://lightning.ai/studios)
+Use the single-file converted checkpoints from
+[`6chan/bagel_comfy`](https://huggingface.co/6chan/bagel_comfy). The native loader
+does not require users to copy the original BAGEL config files into
+`models/bagel`.
+
+### Which VAE should I use?
+
+Load the FLUX autoencoder with the official `VAELoader`, then connect it to
+`VAEEncode`/`VAEDecode`. The native BAGEL nodes do not load a private pipeline
+VAE.
+
+### What image sizes are supported for editing?
+
+Resize the source image before both `VAEEncode` and `BAGEL Image Edit`. Use
+16-aligned dimensions, normally with the short side at least 512 px and the
+long side at most 1024 px.
+
+### Can I still use an original BAGEL or DFloat11 model?
+
+Yes, but use the deprecated workflows and nodes. For native workflows, convert
+the checkpoint or download the matching single-file release.
 
 ## Related links
 
