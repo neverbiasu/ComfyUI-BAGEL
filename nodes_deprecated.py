@@ -56,6 +56,23 @@ def _register_bagel_model_folder() -> None:
 _register_bagel_model_folder()
 
 
+_DEPRECATION_NOTICE_EMITTED = False
+
+
+def _warn_deprecated_nodes_once() -> None:
+    """Make the legacy path visible without disrupting old workflow loading."""
+    global _DEPRECATION_NOTICE_EMITTED
+    if not _DEPRECATION_NOTICE_EMITTED:
+        print(
+            "[BAGEL] Deprecated all-in-one nodes are loaded for legacy workflows. "
+            "Use the native BAGEL nodes with official VAEEncode/VAEDecode for new graphs."
+        )
+        _DEPRECATION_NOTICE_EMITTED = True
+
+
+_warn_deprecated_nodes_once()
+
+
 def _require_dfloat11():
     """Lazily import ``DFloat11Model`` only when a legacy DF11 model is requested.
 
@@ -566,7 +583,7 @@ class BagelModelLoader:
     RETURN_TYPES = ("BAGEL_MODEL",)
     RETURN_NAMES = ("model",)
     FUNCTION = "load_model"
-    CATEGORY = "BAGEL/Core"
+    CATEGORY = "BAGEL/Deprecated"
 
     @classmethod
     def VALIDATE_INPUTS(cls, model_path, quantization_mode="BF16", **kwargs):
@@ -1144,7 +1161,7 @@ class BagelTextToImage:
     RETURN_TYPES = ("IMAGE", "STRING")
     RETURN_NAMES = ("image", "thinking")
     FUNCTION = "generate_image"
-    CATEGORY = "BAGEL/Core"
+    CATEGORY = "BAGEL/Deprecated"
 
     @classmethod
     def VALIDATE_INPUTS(
@@ -1361,7 +1378,7 @@ class BagelImageEdit:
     RETURN_TYPES = ("IMAGE", "STRING")
     RETURN_NAMES = ("image", "thinking")
     FUNCTION = "edit_image"
-    CATEGORY = "BAGEL/Core"
+    CATEGORY = "BAGEL/Deprecated"
 
     @classmethod
     def VALIDATE_INPUTS(
@@ -1532,7 +1549,7 @@ class BagelImageUnderstanding:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("text",)
     FUNCTION = "understand_image"
-    CATEGORY = "BAGEL/Core"
+    CATEGORY = "BAGEL/Deprecated"
 
     @classmethod
     def VALIDATE_INPUTS(cls, model, image, prompt, **kwargs):
@@ -1723,7 +1740,7 @@ class BagelMultiImageEdit:
     RETURN_TYPES = ("IMAGE", "STRING")
     RETURN_NAMES = ("image", "thinking")
     FUNCTION = "edit_multi_images"
-    CATEGORY = "BAGEL/Enhanced"
+    CATEGORY = "BAGEL/Deprecated"
 
     @classmethod
     def VALIDATE_INPUTS(

@@ -17,7 +17,7 @@ function migrateNativeT2IWidgets(values) {
     const oldCfgImgScale = values[4];
     const oldNumTimesteps = values[5];
     const isPreV110 =
-        typeof oldCfgImgScale === "number" && oldCfgImgScale > 1 &&
+        typeof oldCfgImgScale === "number" && oldCfgImgScale >= 1 &&
         typeof oldNumTimesteps === "number" && oldNumTimesteps >= 10;
     if (!isPreV110) return values;
 
