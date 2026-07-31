@@ -1,8 +1,8 @@
 {
   "id": "8d721519-9ead-49c2-9f13-40922da8a782",
   "revision": 0,
-  "last_node_id": 16,
-  "last_link_id": 13,
+  "last_node_id": 18,
+  "last_link_id": 18,
   "nodes": [
     {
       "id": 2,
@@ -37,37 +37,6 @@
       ]
     },
     {
-      "id": 7,
-      "type": "BAGELModelLoader",
-      "pos": [
-        238.84923460409914,
-        39.055157778274065
-      ],
-      "size": [
-        270,
-        58
-      ],
-      "flags": {},
-      "order": 1,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "model",
-          "type": "BAGEL_MODEL",
-          "links": [
-            2
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "BAGELModelLoader"
-      },
-      "widgets_values": [
-        "bagel-7b-mot.safetensors"
-      ]
-    },
-    {
       "id": 9,
       "type": "VAEEncode",
       "pos": [
@@ -79,7 +48,7 @@
         46
       ],
       "flags": {},
-      "order": 4,
+      "order": 3,
       "mode": 0,
       "inputs": [
         {
@@ -98,7 +67,7 @@
           "name": "LATENT",
           "type": "LATENT",
           "links": [
-            5
+            16
           ]
         }
       ],
@@ -119,13 +88,13 @@
         46
       ],
       "flags": {},
-      "order": 6,
+      "order": 5,
       "mode": 0,
       "inputs": [
         {
           "name": "samples",
           "type": "LATENT",
-          "link": 7
+          "link": 14
         },
         {
           "name": "vae",
@@ -148,18 +117,93 @@
       "widgets_values": []
     },
     {
+      "id": 10,
+      "type": "LoadImage",
+      "pos": [
+        237.8762537869404,
+        173.8986366168769
+      ],
+      "size": [
+        282.798828125,
+        314
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            4,
+            17
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "gpt-image-2_00003_.png",
+        "image"
+      ]
+    },
+    {
+      "id": 15,
+      "type": "PreviewAny",
+      "pos": [
+        1204.9182575903453,
+        284.5957003100615
+      ],
+      "size": [
+        210,
+        166
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 15
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
       "id": 13,
       "type": "SaveImage",
       "pos": [
-        1432.17269654128,
-        36.590165004620765
+        1462.0225677062863,
+        37.753895185140166
       ],
       "size": [
         270,
         270
       ],
       "flags": {},
-      "order": 8,
+      "order": 7,
       "mode": 0,
       "inputs": [
         {
@@ -181,52 +225,15 @@
       ]
     },
     {
-      "id": 15,
-      "type": "PreviewAny",
+      "id": 7,
+      "type": "BAGELModelLoader",
       "pos": [
-        1196.1783750860889,
-        328.4806183353731
+        238.84923460409914,
+        39.055157778274065
       ],
       "size": [
-        210,
-        188.23492783525109
-      ],
-      "flags": {},
-      "order": 7,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "source",
-          "type": "*",
-          "link": 12
-        }
-      ],
-      "outputs": [
-        {
-          "name": "STRING",
-          "type": "STRING",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "PreviewAny"
-      },
-      "widgets_values": [
-        null,
-        null,
-        null
-      ]
-    },
-    {
-      "id": 10,
-      "type": "LoadImage",
-      "pos": [
-        237.8762537869404,
-        173.8986366168769
-      ],
-      "size": [
-        282.798828125,
-        314
+        270,
+        58
       ],
       "flags": {},
       "order": 2,
@@ -234,78 +241,30 @@
       "inputs": [],
       "outputs": [
         {
-          "name": "IMAGE",
-          "type": "IMAGE",
+          "name": "model",
+          "type": "BAGEL_MODEL",
           "links": [
-            4,
-            6
-          ]
-        },
-        {
-          "name": "MASK",
-          "type": "MASK",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LoadImage"
-      },
-      "widgets_values": [
-        "gpt-image-2_00003_.png",
-        "image"
-      ]
-    },
-    {
-      "id": 16,
-      "type": "ImageScale",
-      "pos": [
-        270,
-        286
-      ],
-      "size": [
-        315,
-        130
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 13
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            4,
-            6
+            18
           ]
         }
       ],
       "properties": {
-        "Node name for S&R": "ImageScale"
+        "Node name for S&R": "BAGELModelLoader"
       },
       "widgets_values": [
-        "lanczos",
-        768,
-        1024,
-        "disabled"
+        "bagel-7b-mot.safetensors"
       ]
     },
     {
-      "id": 3,
+      "id": 18,
       "type": "BAGELImageEdit",
       "pos": [
-        758.4456750782914,
-        36.600739383973405
+        759.713374393862,
+        35.53632832835194
       ],
       "size": [
         400,
-        272
+        440
       ],
       "flags": {},
       "order": 4,
@@ -314,17 +273,17 @@
         {
           "name": "model",
           "type": "BAGEL_MODEL",
-          "link": 2
+          "link": 18
         },
         {
           "name": "image",
           "type": "IMAGE",
-          "link": 6
+          "link": 17
         },
         {
           "name": "vae_latent",
           "type": "LATENT",
-          "link": 5
+          "link": 16
         }
       ],
       "outputs": [
@@ -332,14 +291,14 @@
           "name": "latent",
           "type": "LATENT",
           "links": [
-            7
+            14
           ]
         },
         {
           "name": "reasoning",
           "type": "STRING",
           "links": [
-            12
+            15
           ]
         }
       ],
@@ -347,9 +306,9 @@
         "Node name for S&R": "BAGELImageEdit"
       },
       "widgets_values": [
-        "Make the girl's hair to pink",
+        "Make the girl's hair into pink",
         4,
-        1.5,
+        2,
         0,
         3,
         50,
@@ -359,20 +318,12 @@
         1024,
         false,
         0.3,
-        494048760037423,
+        288398,
         "randomize"
       ]
     }
   ],
   "links": [
-    [
-      2,
-      7,
-      0,
-      3,
-      0,
-      "BAGEL_MODEL"
-    ],
     [
       3,
       2,
@@ -383,43 +334,11 @@
     ],
     [
       4,
-      16,
-      0,
-      9,
-      0,
-      "IMAGE"
-    ],
-    [
-      5,
-      9,
-      0,
-      3,
-      2,
-      "LATENT"
-    ],
-    [
-      6,
-      16,
-      0,
-      3,
-      1,
-      "IMAGE"
-    ],
-    [
-      13,
       10,
       0,
-      16,
+      9,
       0,
       "IMAGE"
-    ],
-    [
-      7,
-      3,
-      0,
-      11,
-      0,
-      "LATENT"
     ],
     [
       8,
@@ -438,22 +357,54 @@
       "IMAGE"
     ],
     [
-      12,
-      3,
+      14,
+      18,
+      0,
+      11,
+      0,
+      "LATENT"
+    ],
+    [
+      15,
+      18,
       1,
       15,
       0,
       "STRING"
+    ],
+    [
+      16,
+      9,
+      0,
+      18,
+      2,
+      "LATENT"
+    ],
+    [
+      17,
+      10,
+      0,
+      18,
+      1,
+      "IMAGE"
+    ],
+    [
+      18,
+      7,
+      0,
+      18,
+      0,
+      "BAGEL_MODEL"
     ]
   ],
   "groups": [],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.9246080716936946,
+      "scale": 1.0170688788630644,
       "offset": [
-        -138.37477582466786,
-        216.98241611059646
+        -43.08574289839566,
+        181.86535434903197
       ]
     },
     "frontendVersion": "1.45.20"
