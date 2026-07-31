@@ -397,6 +397,16 @@ def generate_text(
     temperature: float = 1.0,
 ) -> str:
     """Run text generation (understanding) and return the decoded string."""
+    max_length = int(max_length)
+    if max_length < 1:
+        raise ValueError(
+            "BAGEL text generation requires max_length >= 1; "
+            "reload or update workflows created before the native thinking controls "
+            "were added."
+        )
+    if do_sample and temperature <= 0:
+        raise ValueError("BAGEL text sampling requires text_temperature > 0")
+
     model = handle["model"]
     gen_context = deepcopy(gen_context)
     kv_lens = gen_context["kv_lens"]
