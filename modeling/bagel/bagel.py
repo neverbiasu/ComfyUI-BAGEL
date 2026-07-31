@@ -57,6 +57,22 @@ class Bagel(PreTrainedModel):
     config_class = BagelConfig
     base_model_prefix = "bagel"
 
+    @property
+    def device(self):
+        """Return the actual parameter device while accepting ComfyUI hints.
+
+        ``transformers.PreTrainedModel`` exposes a read-only ``device``
+        property, whereas ComfyUI's ``ModelPatcher`` assigns to
+        ``model.device`` while attaching/detaching a managed model.  The hint
+        recorded by the setter is deliberately not returned here: parameters
+        remain the source of truth during partial load/offload transitions.
+        """
+        return super().device
+
+    @device.setter
+    def device(self, value):
+        self._comfy_device_hint = torch.device(value)
+
     def __init__(self, language_model, vit_model, config: BagelConfig):
         super().__init__(config)
         self.language_model = language_model

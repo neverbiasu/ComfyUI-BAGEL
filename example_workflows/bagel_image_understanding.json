@@ -1,59 +1,92 @@
 {
-  "id": "832f71f8-5d24-4b6f-bef8-35e3d8c796cb",
+  "id": "80f603cc-cd7a-4856-a4a6-f5ba97296535",
   "revision": 0,
-  "last_node_id": 4,
+  "last_node_id": 5,
   "last_link_id": 3,
   "nodes": [
     {
-      "id": 4,
-      "type": "ShowText|pysssss",
+      "id": 1,
+      "type": "BAGELModelLoader",
       "pos": [
-        1015,
-        130
+        80,
+        120
       ],
       "size": [
-        253.62852478027344,
-        331.75177001953125
+        340,
+        90
       ],
       "flags": {},
-      "order": 3,
+      "order": 0,
       "mode": 0,
-      "inputs": [
-        {
-          "label": "text",
-          "name": "text",
-          "type": "STRING",
-          "link": 3
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "label": "STRING",
-          "name": "STRING",
-          "shape": 6,
-          "type": "STRING",
-          "links": null
+          "label": "model",
+          "name": "model",
+          "type": "BAGEL_MODEL",
+          "links": [
+            1
+          ]
         }
       ],
       "properties": {
-        "cnr_id": "comfyui-custom-scripts",
-        "ver": "1.2.5",
-        "Node name for S&R": "ShowText|pysssss"
+        "Node name for S&R": "BAGELModelLoader",
+        "cnr_id": "comfyui-bagel"
       },
       "widgets_values": [
-        "The humor in this meme comes from the exaggerated change in handwriting style as the exam progresses. At the beginning, the handwriting is clear and legible, indicating a confident and well-prepared student. However, as the exam continues, the handwriting becomes increasingly difficult to read, suggesting that the student is becoming more anxious and less focused. The final part of the meme shows an electrocardiogram (ECG) line, which humorously implies that the student's heart rate is racing and their writing is becoming erratic, much like the fluctuations in an ECG reading. This visual representation of stress and anxiety in the final pages of an exam is what makes the meme funny."
+        "bagel-7b-mot.safetensors"
       ]
     },
     {
       "id": 2,
-      "type": "BagelImageUnderstanding",
+      "type": "LoadImage",
       "pos": [
-        515,
-        130
+        80,
+        280
       ],
       "size": [
-        400,
-        204
+        340,
+        314
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "label": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        },
+        {
+          "label": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "cnr_id": "comfy-core"
+      },
+      "widgets_values": [
+        "meme.jpg",
+        "image"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "BAGELImageUnderstanding",
+      "pos": [
+        540,
+        180
+      ],
+      "size": [
+        420,
+        210
       ],
       "flags": {},
       "order": 2,
@@ -83,99 +116,54 @@
         }
       ],
       "properties": {
-        "cnr_id": "comfyui-bagel",
-        "ver": "4bb49e5232604e4838463f130b3ba7026e428c1d",
-        "Node name for S&R": "BagelImageUnderstanding",
-        "aux_id": "neverbiasu/ComfyUI-Bagel"
+        "Node name for S&R": "BAGELImageUnderstanding",
+        "cnr_id": "comfyui-bagel"
       },
       "widgets_values": [
-        "Can someone explain what's funny about this meme??",
+        "Describe this image in detail.",
         false,
         false,
         0.3,
-        512,
-        [
-          false,
-          true
-        ]
+        512
       ]
     },
     {
-      "id": 1,
-      "type": "BagelModelLoader",
+      "id": 4,
+      "type": "ShowText|pysssss",
       "pos": [
-        100,
-        130
+        1020,
+        180
       ],
       "size": [
-        315,
-        106
+        369.19140625,
+        419.796875
       ],
       "flags": {},
-      "order": 0,
+      "order": 3,
       "mode": 0,
-      "inputs": [],
-      "outputs": [
+      "inputs": [
         {
-          "label": "model",
-          "name": "model",
-          "type": "BAGEL_MODEL",
-          "links": [
-            1
-          ]
+          "label": "text",
+          "name": "text",
+          "type": "STRING",
+          "link": 3
         }
       ],
-      "properties": {
-        "cnr_id": "comfyui-bagel",
-        "ver": "4bb49e5232604e4838463f130b3ba7026e428c1d",
-        "Node name for S&R": "BagelModelLoader",
-        "aux_id": "neverbiasu/ComfyUI-Bagel"
-      },
-      "widgets_values": [
-        "DFloat11/BAGEL-7B-MoT-DF11",
-        "BF16",
-        "BF16"
-      ]
-    },
-    {
-      "id": 3,
-      "type": "LoadImage",
-      "pos": [
-        100,
-        318
-      ],
-      "size": [
-        315,
-        314
-      ],
-      "flags": {},
-      "order": 1,
-      "mode": 0,
-      "inputs": [],
       "outputs": [
         {
-          "label": "IMAGE",
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            2
-          ]
-        },
-        {
-          "label": "MASK",
-          "name": "MASK",
-          "type": "MASK",
+          "label": "STRING",
+          "name": "STRING",
+          "shape": 6,
+          "type": "STRING",
           "links": null
         }
       ],
       "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.30",
-        "Node name for S&R": "LoadImage"
+        "Node name for S&R": "ShowText|pysssss",
+        "cnr_id": "comfyui-custom-scripts"
       },
       "widgets_values": [
-        "meme.jpg",
-        "image"
+        "The image is a collage of three sections, each representing different parts of a handwritten exam paper. The top section is labeled \"First two pages\" and shows a portion of the handwriting that appears to discuss the issue of global warming. The handwriting is legible, with a mix of cursive and print styles, and the text is written in blue ink on lined paper.\n\nThe middle section is labeled \"Middle pages\" and displays a continuation of the handwriting, which seems to be discussing the impact of global warming on the environment. The handwriting is more cursive and less legible than in the first section, and the text is also in blue ink on lined paper.\n\nThe bottom section is labeled \"Last two pages\" and features a completely different type of handwriting that resembles an electrocardiogram (ECG) reading. This section is in black and white, with a grid background that is typical of ECG paper. The handwriting in this section is very faint and difficult to decipher, and it does not appear to be written in blue ink.\n\nThe image has a title at the top that reads \"My Handwriting In Exams,\" suggesting that it is a humorous or satirical representation of how a person's handwriting may change over the course of an exam. The style of the image is a combination of a photograph and a graphic design, with the handwritten text and the ECG-like handwriting presented in a way that emphasizes the contrast between the two."
       ]
     }
   ],
@@ -184,21 +172,21 @@
       1,
       1,
       0,
-      2,
+      3,
       0,
       "BAGEL_MODEL"
     ],
     [
       2,
-      3,
-      0,
       2,
+      0,
+      3,
       1,
       "IMAGE"
     ],
     [
       3,
-      2,
+      3,
       0,
       4,
       0,
@@ -209,17 +197,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.9646149645000006,
+      "scale": 1,
       "offset": [
-        0,
-        -30
+        232.5625,
+        85.6875
       ]
     },
-    "frontendVersion": "1.25.10",
-    "VHS_latentpreview": false,
-    "VHS_latentpreviewrate": 0,
-    "VHS_MetadataImage": true,
-    "VHS_KeepIntermediate": true
+    "frontendVersion": "1.45.20"
   },
   "version": 0.4
 }

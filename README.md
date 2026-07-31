@@ -1,138 +1,159 @@
-# ComfyUI-Bagel
+# ComfyUI-BAGEL
 
-A ComfyUI custom node package based on the BAGEL-7B-MoT multimodal model.
-
-## About BAGEL
+A ComfyUI custom node package for BAGEL-7B-MoT with native ComfyUI model loading.
 
 <p align="center">
   <img src="https://lf3-static.bytednsdoc.com/obj/eden-cn/nuhojubrps/banner.png" alt="BAGEL" width="480"/>
 </p>
 
-BAGEL is an open-source multimodal foundation model with 7B active parameters (14B total) that adopts a Mixture-of-Transformer-Experts (MoT) architecture. It is designed for multimodal understanding and generation tasks, outperforming top-tier open-source VLMs like Qwen2.5-VL and InternVL-2.5 on standard multimodal understanding leaderboards, and delivering text-to-image quality competitive with specialist generators such as SD3.
+## Model paths
 
-## Features
+| Component | Recommended source | Put it here | Loaded by |
+| --- | --- | --- | --- |
+| BAGEL main model | [`6chan/bagel_comfy`](https://huggingface.co/6chan/bagel_comfy) single-file `.safetensors` | `ComfyUI/models/bagel/` | `BAGEL Model Loader` |
+| FLUX AE / VAE | `ae.safetensors` for FLUX | `ComfyUI/models/vae/` | official `VAELoader`, `VAEEncode`, `VAEDecode` |
+| Qwen tokenizer | bundled in this repository | no manual install | `BAGEL Model Loader` |
+| BAGEL model configs | built into the node; optional metadata can override them | no manual install | `BAGEL Model Loader` |
+| Old HF shard layout | `ByteDance-Seed/BAGEL-7B-MoT`, `DFloat11/BAGEL-7B-MoT-DF11` | `ComfyUI/models/bagel/` | deprecated legacy nodes |
 
-- **Text-to-Image Generation**: Generate high-quality images using natural language prompts
-- **Image Editing**: Edit existing images based on textual descriptions  
-- **Image Understanding**: Perform Q&A and analysis on images
-- **Reasoning Process Display**: Optionally display the model's reasoning process
-- **Advanced Quantization Support**: Multiple quantization modes (BF16, NF4, INT8) for the standard model
-- **DFloat11 Quantized Model Support**: Pre-quantized model requiring only ~22GB VRAM for single GPU setups
+> Recommended: download the single-file model from `6chan/bagel_comfy`.
+> If you already have the original BAGEL checkpoint, either convert it with
+> `scripts/convert_bagel_model.py` or re-download the converted file. The
+> converter embeds and validates the `comfyui_bagel` metadata header, including
+> the model configs needed by the native loader.
+> If the Hugging Face repository also contains config files, treat them as
+> conversion/audit references. The native ComfyUI loader does not require users
+> to copy config files into `models/bagel`.
 
-## Installation
+## Install
 
-### 1. Model Selection and Download
-The ComfyUI-Bagel node provides a model selection dropdown with automatic downloading capabilities:
-- **Model Selection UI**: Choose from available Hugging Face repository IDs or local folder names in the dropdown
-- **Auto-download Feature**: When `allow_auto_download` is enabled, models are automatically downloaded to `models/bagel/` on first use
-- **Local Model Detection**: The node automatically scans for locally installed models in the `models/bagel/` directory
+1. Clone this repository into `ComfyUI/custom_nodes/ComfyUI-BAGEL`.
+2. Install the node-specific dependencies:
 
-**Available Models:**
-- **ByteDance-Seed/BAGEL-7B-MoT**: Standard model with multiple quantization options
-  - **BF16**: Full precision mode (~80GB VRAM recommended for multi-GPU)
-  - **NF4**: 4-bit quantization (~12-32GB VRAM, highly recommended for single GPU)
-  - **INT8**: 8-bit quantization (~22-32GB VRAM, moderate compression)
-- **DFloat11/BAGEL-7B-MoT-DF11**: Pre-quantized model (~22GB VRAM, single 24GB GPU compatible)
+   ```bash
+   cd ComfyUI/custom_nodes/ComfyUI-BAGEL
+   pip install -r requirements.txt
+   ```
 
-> [!IMPORTANT]
-> DFloat11 version do not need quantization again!
+3. Download a BAGEL `.safetensors` from [`6chan/bagel_comfy`](https://huggingface.co/6chan/bagel_comfy) into `ComfyUI/models/bagel/`.
+4. Put FLUX `ae.safetensors` into `ComfyUI/models/vae/`.
+5. Restart ComfyUI and load one of the native workflows below.
 
-**Memory is automatically calculated** based on your GPU specifications and selected quantization mode - no manual configuration needed!
+### Existing old-model users
 
-For manual installation, you can download models to `models/bagel/`:
+| Current state | Recommended action |
+| --- | --- |
+| You already downloaded `ByteDance-Seed/BAGEL-7B-MoT` | Convert it with `scripts/convert_bagel_model.py`, or re-download the converted single-file model. |
+| You already downloaded `DFloat11/BAGEL-7B-MoT-DF11` | Keep using deprecated workflows for now, or convert/re-download when a converted quantized release is available. |
+| You have old all-in-one BAGEL workflows | Use the `_deprecated` workflow files and deprecated nodes, then migrate to native workflows. |
 
-#### Standard Model
-```bash
-# Clone model using git lfs (recommended)
-git lfs install
-git clone https://huggingface.co/ByteDance-Seed/BAGEL-7B-MoT models/bagel/BAGEL-7B-MoT
-
-# Or use huggingface_hub
-pip install huggingface_hub
-python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='ByteDance-Seed/BAGEL-7B-MoT', local_dir='models/bagel/BAGEL-7B-MoT')"
-```
-
-#### DFloat11 Quantized Model (Recommended for single GPU)
-```bash
-# Clone DFloat11 quantized model
-git clone https://huggingface.co/DFloat11/BAGEL-7B-MoT-DF11 models/bagel/BAGEL-7B-MoT-DF11
-
-# Or use huggingface_hub
-python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='DFloat11/BAGEL-7B-MoT-DF11', local_dir='models/bagel/BAGEL-7B-MoT-DF11')"
-```
-
-### 2. Install Dependencies
-Install the required dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-For advanced quantization support (NF4/INT8 modes), also install:
-```bash
-pip install bitsandbytes
-```
-
-For DFloat11 quantized model support, also install:
-```bash
-pip install dfloat11
-```
-
-**Note**: `bitsandbytes` is required for NF4 and INT8 quantization modes on the standard ByteDance model. DFloat11 model works without additional quantization libraries.
-
-### 3. Restart ComfyUI
-Restart ComfyUI to load the new nodes.
+Legacy auto-download and all-in-one loader instructions were moved to
+[`docs/deprecated-installation.md`](docs/deprecated-installation.md).
 
 ## Workflows
 
-### Text-to-Image Generation
-![text to image workflow](example_workflows/bagel_text_to_image.png)
-Generate high-quality images from text descriptions. Suitable for creative design and content generation.
+![BAGEL text-to-image workflow](example_workflows/bagel_text_to_image.png)
 
-### Image Editing Workflow
-![image editing workflow](example_workflows/bagel_image_editing.png)
-Edit existing images based on textual descriptions, supporting local modifications and style adjustments.
+![BAGEL image-editing workflow](example_workflows/bagel_image_editing.png)
 
-### Image Understanding Workflow
-![image understanding workflow](example_workflows/bagel_image_understanding.png)
-Analyze and answer questions about image content, suitable for content understanding and information extraction.
+![BAGEL image-understanding workflow](example_workflows/bagel_image_understanding.png)
 
-## Performance Comparison
+| Workflow | File | Extra nodes | Notes |
+| --- | --- | --- | --- |
+| Text-to-image | `example_workflows/bagel_text_to_image.json` | none | Native BAGEL latent generation, official `VAEDecode`. |
+| Image editing | `example_workflows/bagel_image_editing.json` | official `ImageScale`, `VAEEncode`, `VAEDecode` | Resize the source image before both `VAEEncode` and `BAGEL Image Edit`; use 16-aligned dimensions, with a 512–1024px range matching the original BAGEL preprocessing. |
+| Image understanding | `example_workflows/bagel_image_understanding.json` | `ShowText|pysssss` from `comfyui-custom-scripts`, or replace with official `Preview as Text` on newer ComfyUI | VIT/text path only; no VAE nodes required. |
+| Deprecated text-to-image | `example_workflows/bagel_text_to_image_deprecated.json` | `comfyui-custom-scripts` | Old all-in-one loader. |
+| Deprecated image editing | `example_workflows/bagel_image_editing_deprecated.json` | `comfyui-custom-scripts` | Old all-in-one loader. |
+| Deprecated image understanding | `example_workflows/bagel_image_understanding_deprecated.json` | `comfyui-custom-scripts` | Old all-in-one loader. |
 
-| Metric | BAGEL-7B-MoT (Standard Model) | BAGEL-7B-MoT (DFloat11 Quantized Model) |
-|--------|-------------------------------|-----------------------------------------|
-| Model Size | 29.21 GB | 19.89 GB |
-| Peak GPU Memory (1024x1024 image generation) | 30.07 GB | 21.76 GB |
-| Generation Time (on an RTX4090 GPU) | 482.95 seconds | 154.39 seconds |
+## Model and runtime matrix
 
-DFloat11 Quantized Model significantly reduces VRAM requirements and speeds up generation time, making it ideal for single GPU setups.
+| Path | Model source | File layout | Nodes | VAE | Status |
+| --- | --- | --- | --- | --- | --- |
+| Native BF16 | `6chan/bagel_comfy` | single `.safetensors` in `models/bagel` | `BAGEL*` native nodes | official FLUX AE | recommended |
+| Converted local BF16 | original `ByteDance-Seed/BAGEL-7B-MoT` converted by script | single `.safetensors` in `models/bagel` | `BAGEL*` native nodes | official FLUX AE | supported |
+| Legacy standard | original HF shard folder | folder in `models/bagel` | `Bagel* (Deprecated)` | internal legacy VAE | compatibility only |
+| Legacy DFloat11 | DFloat11 HF folder | folder in `models/bagel` | `Bagel* (Deprecated)` | internal legacy VAE | compatibility only |
 
-## Related Links
+| Task | Recommended workflow | Expected VRAM | Current validation |
+| --- | --- | --- | --- |
+| Text-to-image | native BF16 + official VAE decode | A100-class / high-VRAM GPU recommended | ran on Modal A100; exact benchmark pending |
+| Image editing | native BF16 + official VAE encode/decode | A100-class / high-VRAM GPU recommended | ran on Modal A100; exact benchmark pending |
+| Image understanding | native BF16, no VAE | lower than generation/editing, still needs BAGEL loaded | workflow prepared; run on remote GPU |
+| Legacy DFloat11 generation | deprecated workflows | 21.76 GB reported for 1024x1024 | old README reported 154.39 s on RTX 4090 |
+| Legacy standard generation | deprecated workflows | 30.07 GB reported for 1024x1024 | old README reported 482.95 s on RTX 4090 |
 
-- [BAGEL Official Paper](https://arxiv.org/abs/2505.14683)
-- [BAGEL Model Homepage](https://bagel-ai.org/)
-- [Hugging Face Model](https://huggingface.co/ByteDance-Seed/BAGEL-7B-MoT)
-- [Online Demo](https://demo.bagel-ai.org/)
-- [Discord Community](https://discord.gg/Z836xxzy)
+## TODO: model variant support
 
-## License
+Future BAGEL variants will be tracked from the
+[`6chan/bagel`](https://huggingface.co/collections/6chan/bagel) collection. The
+support path depends on each model's file format, modality inputs, and inference
+logic.
 
-This project is licensed under the Apache 2.0 License. Please refer to the official license terms for the use of the BAGEL model.
+| Variant family | Example models in collection | Input / output shape | Planned ComfyUI support |
+| --- | --- | --- | --- |
+| Base BAGEL any-to-any | `ByteDance-Seed/BAGEL-7B-MoT`, `6chan/bagel_comfy` | text, image, latent -> text/image | current native nodes |
+| Image editing / NHR editing | `iitolstykh/Bagel-NHR-Edit`, `Bagel-NHR-Edit-V2` | image + edit prompt -> image | first try native image-edit adapter; add a dedicated edit node if prompt/image order differs |
+| Reasoning / VQA variants | `multimodal-reasoning-lab/Bagel-Zebra-CoT`, `sensenova/SenseNova-SI-1.1-BAGEL-7B-MoT` | image + text -> text | adapt `BAGEL Image Understanding`; add reasoning-specific controls if needed |
+| Text-to-image variants | `Wayne-King/SRUM_BAGEL_7B_MoT`, `Ryann829/Scone`, `LLM-Drop/*GEN*`, `Yanran21/UniGenDet` | text -> image | adapt `BAGEL Text to Image`; add model-specific generation options only when required |
+| SIGMA variants | SIGMA checkpoints in the collection and related releases | style/subject or structured conditioning -> image | add a SIGMA-specific loader/conditioning node after its checkpoint metadata and reference workflow are verified |
+| Quantized formats | `DFloat11/*`, FP8, INT8, GGUF, AutoRound INT4 | same tasks, different weight format/runtime | separate loader/converter path; do not mix into the BF16 loader unless the state dict is compatible |
+| Specialized any-to-any / composition | `ThinkMorph`, `Uni-Edit`, `UniCorn`, `ConsistCompose`, `Echo-4o`, `SenseNova-Vision` | may add multi-image, identity, composition, or agentic conditioning | inspect model card + sample code first; add new nodes when graph inputs differ from the base BAGEL tasks |
+
+| Support stage | Acceptance gate |
+| --- | --- |
+| Catalog | Add model to a comparison table with source, license, task, file format, expected VRAM, and required nodes. |
+| Load | Converted or downloaded model appears in the correct ComfyUI model folder and loads without auto-downloading pipeline code. |
+| Smoke test | One minimal workflow runs on a remote GPU for the model's primary task. |
+| Workflow | Add or update an example workflow with official ComfyUI nodes where possible. |
+| Benchmark | Record GPU, VRAM peak, image size, steps, and wall-clock time. |
 
 ## Contribution
 
-Contributions are welcome! Please submit issue reports and feature requests. If you wish to contribute code, please create an issue to discuss your ideas first.
+Contributions are welcome. Please open an issue for compatibility problems,
+variant support requests, or proposed changes before submitting a pull request.
+For code changes, include the affected workflow and the ComfyUI version used for
+validation when possible.
 
 ## FAQ
 
-### 1. VRAM Requirements & Optimization
-With the new automatic memory management and quantization options:
-- **24GB GPU (Single)**: Use NF4 quantization or DFloat11 model for optimal performance
-- **12-16GB GPU**: Use NF4 quantization for best results (may require some CPU offloading)
-- **8GB GPU**: Limited support with NF4 + aggressive offloading
-- **Multi-GPU**: BF16 mode automatically distributes load across available GPUs
-- **Memory is calculated automatically** based on your hardware - no manual configuration needed!
+### Which model should I download?
 
-### 2. NameError: 'Qwen2Config' is not defined
-This issue is likely related to environment or dependency problems. You can install flash-attention and triton with the following links:
-[v2.7.4.post1_crossos00](https://github.com/loscrossos/lib_flashattention/releases/tag/v2.7.4.post1_crossos00) [flash-attention-windows-wheel](https://huggingface.co/lldacing/flash-attention-windows-wheel/tree/main) [triton-windows-builds](https://hf-mirror.com/madbuda/triton-windows-builds/tree/main)
-For more information, refer to [this GitHub issue](https://github.com/neverbiasu/ComfyUI-BAGEL/issues/7).
+Use the single-file converted checkpoints from
+[`6chan/bagel_comfy`](https://huggingface.co/6chan/bagel_comfy). The native loader
+does not require users to copy the original BAGEL config files into
+`models/bagel`.
+
+### Which VAE should I use?
+
+Load the FLUX autoencoder with the official `VAELoader`, then connect it to
+`VAEEncode`/`VAEDecode`. The native BAGEL nodes do not load a private pipeline
+VAE.
+
+### What image sizes are supported for editing?
+
+Resize the source image before both `VAEEncode` and `BAGEL Image Edit`. Use
+16-aligned dimensions, normally with the short side at least 512 px and the
+long side at most 1024 px.
+
+### Can I still use an original BAGEL or DFloat11 model?
+
+Yes, but use the deprecated workflows and nodes. For native workflows, convert
+the checkpoint or download the matching single-file release.
+
+## Related links
+
+| Resource | Link |
+| --- | --- |
+| BAGEL paper | https://arxiv.org/abs/2505.14683 |
+| BAGEL homepage | https://bagel-ai.org/ |
+| Original BAGEL model | https://huggingface.co/ByteDance-Seed/BAGEL-7B-MoT |
+| Recommended converted ComfyUI model | https://huggingface.co/6chan/bagel_comfy |
+| BAGEL variant collection | https://huggingface.co/collections/6chan/bagel |
+| Online demo | https://demo.bagel-ai.org/ |
+
+## License
+
+This project is licensed under the Apache 2.0 License. Please refer to the
+official license terms for the use of the BAGEL model.
